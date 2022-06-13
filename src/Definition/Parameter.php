@@ -56,14 +56,28 @@ class Parameter implements \Serializable
         return null !== $this->schema;
     }
 
-    public function serialize(): string
+    public function __serialize(): array
     {
-        return serialize([
+        return [
             'location' => $this->location,
             'name' => $this->name,
             'required' => $this->required,
             'schema' => $this->schema,
-        ]);
+        ];
+    }
+
+    public function __unserialize(array $data): void
+    {
+        $this->location = $data['location'];
+        $this->name = $data['name'];
+        $this->required = $data['required'];
+        $this->schema = $data['schema'];
+    }
+
+
+    public function serialize(): string
+    {
+        return serialize($this->__serialize());
     }
 
     /**
@@ -71,10 +85,6 @@ class Parameter implements \Serializable
      */
     public function unserialize($serialized)
     {
-        $data = unserialize($serialized);
-        $this->location = $data['location'];
-        $this->name = $data['name'];
-        $this->required = $data['required'];
-        $this->schema = $data['schema'];
+        $this->__unserialize(unserialize($serialized));
     }
 }

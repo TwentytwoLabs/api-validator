@@ -35,7 +35,7 @@ class RequestDefinitions implements \Serializable, \IteratorAggregate
 
     // IteratorAggregate
 
-    public function getIterator(): iterable
+    public function getIterator(): \Traversable
     {
         foreach ($this->definitions as $operationId => $requestDefinition) {
             yield $operationId => $requestDefinition;
@@ -43,22 +43,24 @@ class RequestDefinitions implements \Serializable, \IteratorAggregate
     }
 
     // Serializable
+    public function __serialize(): array
+    {
+        return ['definitions' => $this->definitions];
+    }
+
+    public function __unserialize(array $data): void
+    {
+        $this->definitions = $data['definitions'];
+    }
 
     public function serialize(): string
     {
-        return serialize([
-            'definitions' => $this->definitions,
-        ]);
+        return serialize($this->__serialize());
     }
 
-    // Serializable
-    /**
-     * @param string $serialized
-     */
     public function unserialize($serialized)
     {
-        $data = unserialize($serialized);
-        $this->definitions = $data['definitions'];
+        $this->__unserialize(unserialize($serialized));
     }
 
     private function addRequestDefinition(RequestDefinition $requestDefinition): void

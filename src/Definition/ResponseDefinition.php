@@ -71,25 +71,32 @@ class ResponseDefinition implements \Serializable, MessageDefinition
     }
 
     // Serializable
-
-    public function serialize(): string
+    public function __serialize(): array
     {
-        return serialize([
+        return [
             'statusCode' => $this->statusCode,
             'contentTypes' => $this->contentTypes,
             'parameters' => $this->parameters,
-        ]);
+        ];
     }
 
-    // Serializable
+    public function __unserialize(array $data): void
+    {
+        $this->statusCode = $data['statusCode'];
+        $this->contentTypes = $data['contentTypes'];
+        $this->parameters = $data['parameters'];
+    }
+
+    public function serialize(): string
+    {
+        return serialize($this->serialize());
+    }
+
     /**
      * @param string $serialized
      */
     public function unserialize($serialized)
     {
-        $data = unserialize($serialized);
-        $this->statusCode = $data['statusCode'];
-        $this->contentTypes = $data['contentTypes'];
-        $this->parameters = $data['parameters'];
+        $this->__unserialize(unserialize($serialized));
     }
 }

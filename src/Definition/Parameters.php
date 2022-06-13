@@ -21,7 +21,7 @@ class Parameters implements \Serializable, \IteratorAggregate
         }
     }
 
-    public function getIterator(): iterable
+    public function getIterator(): \Traversable
     {
         foreach ($this->parameters as $name => $parameter) {
             yield $name => $parameter;
@@ -120,20 +120,27 @@ class Parameters implements \Serializable, \IteratorAggregate
     }
 
     // Serializable
+    public function __serialize(): array
+    {
+        return ['parameters' => $this->parameters];
+    }
+
+    public function __unserialize(array $data): void
+    {
+        $this->parameters = $data['parameters'];
+    }
 
     public function serialize(): string
     {
-        return serialize(['parameters' => $this->parameters]);
+        return serialize($this->__serialize());
     }
 
-    // Serializable
     /**
      * @param string $serialized
      */
     public function unserialize($serialized)
     {
-        $data = unserialize($serialized);
-        $this->parameters = $data['parameters'];
+        $this->__unserialize(unserialize($serialized));
     }
 
     /**

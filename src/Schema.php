@@ -79,28 +79,35 @@ class Schema implements \Serializable
     }
 
     // Serializable
-
-    public function serialize(): string
+    public function __serialize(): array
     {
-        return serialize([
+        return [
             'host' => $this->host,
             'basePath' => $this->basePath,
             'schemes' => $this->schemes,
             'requests' => $this->requestDefinitions,
-        ]);
+        ];
     }
 
-    // Serializable
+    public function __unserialize(array $data): void
+    {
+        $this->host = $data['host'];
+        $this->basePath = $data['basePath'];
+        $this->schemes = $data['schemes'];
+        $this->requestDefinitions = $data['requests'];
+    }
+
+    public function serialize(): string
+    {
+        return serialize($this->__serialize());
+    }
+
     /**
      * @param string $serialized
      */
     public function unserialize($serialized)
     {
-        $data = unserialize($serialized);
-        $this->host = $data['host'];
-        $this->basePath = $data['basePath'];
-        $this->schemes = $data['schemes'];
-        $this->requestDefinitions = $data['requests'];
+        $this->__unserialize(unserialize($serialized));
     }
 
     private function isMatchingPath(string $pathTemplate, string $requestPath): bool

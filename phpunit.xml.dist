@@ -9,6 +9,7 @@
     columns="max"
     beStrictAboutResourceUsageDuringSmallTests="true"
     beStrictAboutChangesToGlobalState="true"
+    convertDeprecationsToExceptions="true"
 >
     <testsuites>
         <testsuite name="Swagger Test Suite">

@@ -121,10 +121,9 @@ class RequestDefinition implements \Serializable, MessageDefinition
     }
 
     // Serializable
-
-    public function serialize(): string
+    public function __serialize(): array
     {
-        return serialize([
+        return [
             'method' => $this->method,
             'operationId' => $this->operationId,
             'pathTemplate' => $this->pathTemplate,
@@ -132,16 +131,11 @@ class RequestDefinition implements \Serializable, MessageDefinition
             'contentTypes' => $this->contentTypes,
             'accepts' => $this->accepts,
             'responses' => $this->responses,
-        ]);
+        ];
     }
 
-    // Serializable
-    /**
-     * @param string $serialized
-     */
-    public function unserialize($serialized)
+    public function __unserialize(array $data): void
     {
-        $data = unserialize($serialized);
         $this->method = $data['method'];
         $this->operationId = $data['operationId'];
         $this->pathTemplate = $data['pathTemplate'];
@@ -149,6 +143,19 @@ class RequestDefinition implements \Serializable, MessageDefinition
         $this->contentTypes = $data['contentTypes'];
         $this->accepts = $data['accepts'];
         $this->responses = $data['responses'];
+    }
+
+    public function serialize(): string
+    {
+        return serialize($this->__serialize());
+    }
+
+    /**
+     * @param string $serialized
+     */
+    public function unserialize($serialized)
+    {
+        $this->__unserialize(unserialize($serialized));
     }
 
     private function addResponseDefinition(ResponseDefinition $response)
