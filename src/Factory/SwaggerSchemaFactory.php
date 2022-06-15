@@ -100,6 +100,10 @@ class SwaggerSchemaFactory implements SchemaFactoryInterface
         $basePath = $schema->basePath ?? '';
         foreach ($schema->paths as $pathTemplate => $methods) {
             foreach ($methods as $method => $definition) {
+                if ('parameters' === $method) {
+                    continue;
+                }
+
                 $method = strtoupper($method);
                 $contentTypes = $defaultConsumedContentTypes;
                 if (isset($definition->consumes)) {
