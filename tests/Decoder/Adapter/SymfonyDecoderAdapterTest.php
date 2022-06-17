@@ -36,7 +36,7 @@ class SymfonyDecoderAdapterTest extends TestCase
     {
         $data = '[{"foo": "foo1"}, {"foo": "foo2"}]';
 
-        $decoder = new SymfonyDecoderAdapter(new JsonDecode(true));
+        $decoder = new SymfonyDecoderAdapter(new JsonDecode());
         $actual = $decoder->decode($data, 'json');
 
         $this->assertTrue(is_array($actual));
