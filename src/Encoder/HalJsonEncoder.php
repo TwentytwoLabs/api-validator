@@ -14,7 +14,7 @@ class HalJsonEncoder extends JsonEncoder
     /**
      * {@inheritdoc}
      */
-    public function decode($data, $format, array $context = [])
+    public function decode(string $data, string $format, array $context = []): mixed
     {
         $valid = isset($context['json_decode_associative']);
         unset($context['json_decode_associative']);
@@ -42,7 +42,7 @@ class HalJsonEncoder extends JsonEncoder
     /**
      * {@inheritdoc}
      */
-    public function encode($data, $format, array $context = [])
+    public function encode($data, $format, array $context = []): string
     {
         return $this->encodingImpl->encode($data, 'json', $context);
     }
@@ -50,7 +50,7 @@ class HalJsonEncoder extends JsonEncoder
     /**
      * {@inheritdoc}
      */
-    public function supportsDecoding($format)
+    public function supportsDecoding($format): bool
     {
         return 'hal+json' === $format;
     }
@@ -58,7 +58,7 @@ class HalJsonEncoder extends JsonEncoder
     /**
      * {@inheritdoc}
      */
-    public function supportsEncoding($format)
+    public function supportsEncoding($format): bool
     {
         return 'hal+json' === $format;
     }
