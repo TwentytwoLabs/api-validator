@@ -52,6 +52,5 @@
             "ocramius/package-versions": true,
             "infection/extension-installer": true
         }
-    },
-    "minimum-stability": "dev"
+    }
 }
