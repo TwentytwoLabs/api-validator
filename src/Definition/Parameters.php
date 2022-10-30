@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 namespace TwentytwoLabs\Api\Definition;
 
-/**
- * Class Parameters.
- */
 class Parameters implements \Serializable, \IteratorAggregate
 {
     /**

@@ -7,9 +7,6 @@ namespace TwentytwoLabs\Api\Factory;
 use Psr\Cache\CacheItemPoolInterface;
 use TwentytwoLabs\Api\Schema;
 
-/**
- * Class CachedSchemaFactoryDecorator.
- */
 class CachedSchemaFactoryDecorator implements SchemaFactoryInterface
 {
     private SchemaFactoryInterface $schemaFactory;

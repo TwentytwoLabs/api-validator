@@ -8,9 +8,6 @@ use Rize\UriTemplate;
 use TwentytwoLabs\Api\Definition\RequestDefinition;
 use TwentytwoLabs\Api\Definition\RequestDefinitions;
 
-/**
- * Class Schema.
- */
 class Schema implements \Serializable
 {
     private RequestDefinitions $requestDefinitions;

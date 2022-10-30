@@ -6,9 +6,6 @@ namespace TwentytwoLabs\Api\Validator\Exception;
 
 use TwentytwoLabs\Api\Validator\ConstraintViolation;
 
-/**
- * Class ConstraintViolations.
- */
 class ConstraintViolations extends \Exception
 {
     /**

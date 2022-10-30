@@ -6,9 +6,6 @@ namespace TwentytwoLabs\Api\Encoder;
 
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
 
-/**
- * Class ProblemJsonEncoder.
- */
 class ProblemJsonEncoder extends JsonEncoder
 {
     public function supportsDecoding($format): bool

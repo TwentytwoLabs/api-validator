@@ -19,10 +19,8 @@ class YamlUriRetriever extends UriRetriever
 
     /**
      * @param string $fetchUri
-     *
-     * @return mixed
      */
-    protected function loadSchema($fetchUri)
+    protected function loadSchema($fetchUri): mixed
     {
         if (isset($this->schemaCache[$fetchUri])) {
             return $this->schemaCache[$fetchUri];

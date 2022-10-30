@@ -6,8 +6,6 @@ namespace TwentytwoLabs\Api\Validator;
 
 /**
  * ValueObject that contains constraint violation properties.
- *
- * Class ConstraintViolation.
  */
 class ConstraintViolation
 {

@@ -16,9 +16,6 @@ use TwentytwoLabs\Api\Definition\MessageDefinition;
 use TwentytwoLabs\Api\Definition\RequestDefinition;
 use TwentytwoLabs\Api\Normalizer\QueryParamsNormalizer;
 
-/**
- * Class MessageValidator.
- */
 class MessageValidator
 {
     private Validator $validator;

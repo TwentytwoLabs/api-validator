@@ -12,25 +12,21 @@ class ResponseDefinition implements \Serializable, MessageDefinition
     /**
      * @var int|string
      */
-    private $statusCode;
+    private string|int $statusCode;
     private array $contentTypes;
     private Parameters $parameters;
 
     /**
-     * @param int|string $statusCode
      * @param string[]   $allowedContentTypes
      */
-    public function __construct($statusCode, array $allowedContentTypes, Parameters $parameters)
+    public function __construct(int|string $statusCode, array $allowedContentTypes, Parameters $parameters)
     {
         $this->statusCode = $statusCode;
         $this->contentTypes = $allowedContentTypes;
         $this->parameters = $parameters;
     }
 
-    /**
-     * @return int|string
-     */
-    public function getStatusCode()
+    public function getStatusCode(): int|string
     {
         return $this->statusCode;
     }

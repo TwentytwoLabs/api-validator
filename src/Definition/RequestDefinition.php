@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 namespace TwentytwoLabs\Api\Definition;
 
-/**
- * Class RequestDefinition.
- */
 class RequestDefinition implements \Serializable, MessageDefinition
 {
     private string $method;
@@ -21,8 +18,15 @@ class RequestDefinition implements \Serializable, MessageDefinition
      * @param string[]             $contentTypes
      * @param ResponseDefinition[] $responses
      */
-    public function __construct(string $method, string $operationId, string $pathTemplate, Parameters $parameters, array $contentTypes, array $accepts, array $responses)
-    {
+    public function __construct(
+        string $method,
+        string $operationId,
+        string $pathTemplate,
+        Parameters $parameters,
+        array $contentTypes,
+        array $accepts,
+        array $responses
+    ) {
         $this->method = $method;
         $this->operationId = $operationId;
         $this->pathTemplate = $pathTemplate;
@@ -64,10 +68,7 @@ class RequestDefinition implements \Serializable, MessageDefinition
         return $this->accepts;
     }
 
-    /**
-     * @param int|string $statusCode
-     */
-    public function getResponseDefinition($statusCode): ResponseDefinition
+    public function getResponseDefinition(int|string $statusCode): ResponseDefinition
     {
         if (isset($this->responses[$statusCode])) {
             return $this->responses[$statusCode];

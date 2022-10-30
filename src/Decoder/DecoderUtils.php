@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 namespace TwentytwoLabs\Api\Decoder;
 
-/**
- * Class DecoderUtils.
- */
 class DecoderUtils
 {
     public static function extractFormatFromContentType(string $contentType): string

@@ -7,9 +7,6 @@ namespace TwentytwoLabs\Api\Decoder\Adapter;
 use Symfony\Component\Serializer\Encoder\DecoderInterface as SymfonyDecoderInterface;
 use TwentytwoLabs\Api\Decoder\DecoderInterface;
 
-/**
- * Class SymfonyDecoderAdapter.
- */
 class SymfonyDecoderAdapter implements DecoderInterface
 {
     private SymfonyDecoderInterface $decoder;
@@ -23,7 +20,7 @@ class SymfonyDecoderAdapter implements DecoderInterface
     {
         $context = [];
 
-        if (preg_match('#json#', $format)) {
+        if (str_contains($format, 'json')) {
             // the JSON schema validator need an object hierarchy
             $context['json_decode_associative'] = false;
         }

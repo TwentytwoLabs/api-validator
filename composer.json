@@ -21,7 +21,7 @@
         ]
     },
     "require": {
-        "php": ">=7.4",
+        "php": ">=8.0",
         "ext-json": "*",
         "psr/http-message": "^1.0",
         "psr/cache": ">=1.0",
@@ -52,5 +52,6 @@
             "ocramius/package-versions": true,
             "infection/extension-installer": true
         }
-    }
+    },
+    "minimum-stability": "dev"
 }

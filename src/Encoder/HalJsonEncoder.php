@@ -6,9 +6,6 @@ namespace TwentytwoLabs\Api\Encoder;
 
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
 
-/**
- * Class HalJsonEncoder.
- */
 class HalJsonEncoder extends JsonEncoder
 {
     /**

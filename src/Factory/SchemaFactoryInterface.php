@@ -6,9 +6,6 @@ namespace TwentytwoLabs\Api\Factory;
 
 use TwentytwoLabs\Api\Schema;
 
-/**
- * Interface SchemaFactoryInterface.
- */
 interface SchemaFactoryInterface
 {
     public function createSchema(string $schemaFile): Schema;

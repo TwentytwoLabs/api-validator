@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 namespace TwentytwoLabs\Api\Definition;
 
-/**
- * Class Parameter.
- */
 class Parameter implements \Serializable
 {
     public const BODY_LOCATIONS = ['formData', 'body'];
@@ -22,7 +19,13 @@ class Parameter implements \Serializable
     public function __construct(string $location, string $name, bool $required = false, ?\stdClass $schema = null)
     {
         if (!\in_array($location, self::LOCATIONS, true)) {
-            throw new \InvalidArgumentException(sprintf('%s is not a supported parameter location, supported: %s', $location, implode(', ', self::LOCATIONS)));
+            throw new \InvalidArgumentException(
+                sprintf(
+                    '%s is not a supported parameter location, supported: %s',
+                    $location,
+                    implode(', ', self::LOCATIONS)
+                )
+            );
         }
 
         $this->location = $location;
