@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace TwentytwoLabs\Api\Factory;
+namespace TwentytwoLabs\ApiValidator\Factory;
 
 use Psr\Cache\CacheItemPoolInterface;
-use TwentytwoLabs\Api\Schema;
+use TwentytwoLabs\ApiValidator\Schema;
 
-class CachedSchemaFactoryDecorator implements SchemaFactoryInterface
+final class CachedSchemaFactoryDecorator implements SchemaFactoryInterface
 {
     private SchemaFactoryInterface $schemaFactory;
     private CacheItemPoolInterface $cache;

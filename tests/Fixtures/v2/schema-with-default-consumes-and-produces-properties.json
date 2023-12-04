@@ -6,9 +6,13 @@
   "paths": {
     "/something": {
       "post": {
+        "produces": ["application/json"],
         "operationId": "postSomething",
         "responses": {
           "201": {
+            "description": "created"
+          },
+          "default": {
             "description": "created"
           }
         }

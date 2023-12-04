@@ -2,30 +2,21 @@
 
 declare(strict_types=1);
 
-namespace TwentytwoLabs\Api\Definition;
+namespace TwentytwoLabs\ApiValidator\Definition;
 
-class Parameter implements \Serializable
+final class Parameter
 {
-    public const BODY_LOCATIONS = ['formData', 'body'];
-    public const BODY_LOCATIONS_TYPES = ['formData' => 'application/x-www-form-urlencoded', 'body' => 'application/json'];
-
-    private const LOCATIONS = ['path', 'header', 'query', 'body', 'formData'];
+    private const LOCATIONS = ['header', 'path', 'query', 'body', 'formData'];
 
     private string $location;
     private string $name;
     private bool $required;
-    private ?\stdClass $schema;
+    private array $schema;
 
-    public function __construct(string $location, string $name, bool $required = false, ?\stdClass $schema = null)
+    public function __construct(string $location, string $name, bool $required = false, array $schema = [])
     {
         if (!\in_array($location, self::LOCATIONS, true)) {
-            throw new \InvalidArgumentException(
-                sprintf(
-                    '%s is not a supported parameter location, supported: %s',
-                    $location,
-                    implode(', ', self::LOCATIONS)
-                )
-            );
+            throw new \InvalidArgumentException(sprintf('%s is not a supported parameter location, supported: %s', $location, implode(', ', self::LOCATIONS)));
         }
 
         $this->location = $location;
@@ -49,45 +40,13 @@ class Parameter implements \Serializable
         return $this->required;
     }
 
-    public function getSchema(): ?\stdClass
+    public function getSchema(): array
     {
         return $this->schema;
     }
 
     public function hasSchema(): bool
     {
-        return null !== $this->schema;
-    }
-
-    public function __serialize(): array
-    {
-        return [
-            'location' => $this->location,
-            'name' => $this->name,
-            'required' => $this->required,
-            'schema' => $this->schema,
-        ];
-    }
-
-    public function __unserialize(array $data): void
-    {
-        $this->location = $data['location'];
-        $this->name = $data['name'];
-        $this->required = $data['required'];
-        $this->schema = $data['schema'];
-    }
-
-
-    public function serialize(): string
-    {
-        return serialize($this->__serialize());
-    }
-
-    /**
-     * @param string $serialized
-     */
-    public function unserialize($serialized)
-    {
-        $this->__unserialize(unserialize($serialized));
+        return !empty($this->schema);
     }
 }

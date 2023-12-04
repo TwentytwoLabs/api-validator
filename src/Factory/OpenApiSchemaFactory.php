@@ -2,145 +2,157 @@
 
 declare(strict_types=1);
 
-namespace TwentytwoLabs\Api\Factory;
+namespace TwentytwoLabs\ApiValidator\Factory;
 
-use JsonSchema\SchemaStorage;
-use JsonSchema\Uri\UriResolver;
-use JsonSchema\Uri\UriRetriever;
-use Symfony\Component\Yaml\Yaml;
-use TwentytwoLabs\Api\Definition\Parameter;
-use TwentytwoLabs\Api\Definition\Parameters;
-use TwentytwoLabs\Api\Definition\RequestDefinition;
-use TwentytwoLabs\Api\Definition\RequestDefinitions;
-use TwentytwoLabs\Api\Definition\ResponseDefinition;
-use TwentytwoLabs\Api\JsonSchema\Uri\YamlUriRetriever;
-use TwentytwoLabs\Api\Schema;
+use TwentytwoLabs\ApiValidator\Definition\OperationDefinition;
+use TwentytwoLabs\ApiValidator\Definition\OperationDefinitions;
+use TwentytwoLabs\ApiValidator\Definition\Parameters;
+use TwentytwoLabs\ApiValidator\Definition\ResponseDefinition;
 
-class OpenApiSchemaFactory extends AbstractSchemaFactory
+final class OpenApiSchemaFactory extends AbstractSchemaFactory
 {
-    protected function createRequestDefinitions(\stdClass $schema): RequestDefinitions
+    protected function createOperationDefinitions(array $schema): OperationDefinitions
     {
+        $securityDefinitions = $this->createSecurityDefinitions($schema);
         $definitions = [];
-        $defaultConsumedContentTypes = [];
-        $defaultProducedContentTypes = [];
-
-        $basePath = $schema->basePath ?? '';
-        foreach ($schema->paths as $pathTemplate => $methods) {
+        foreach ($schema['paths'] ?? [] as $pathTemplate => $methods) {
             foreach ($methods as $method => $definition) {
                 if ('parameters' === $method) {
                     continue;
                 }
 
                 $method = strtoupper($method);
-                if (!isset($definition->operationId)) {
-                    throw new \LogicException(sprintf('You need to provide an operationId for %s %s', $method, $pathTemplate));
+
+                if (empty($definition['responses'])) {
+                    $message = sprintf('You need to specify at least one response for %s %s', $method, $pathTemplate);
+                    throw new \LogicException($message);
                 }
 
-                if (!isset($definition->responses)) {
-                    throw new \LogicException(
-                        sprintf('You need to specify at least one response for %s %s', $method, $pathTemplate)
-                    );
+                $requestParameters = $this->createRequestParameters($definition, $securityDefinitions);
+                $responses = $this->createResponseDefinitions($definition['responses']);
+
+                $accepts = [];
+                /** @var ResponseDefinition $response */
+                foreach ($responses as $response) {
+                    $accepts = array_merge($accepts, array_keys($response->getBodySchema()));
                 }
 
-                $contentTypes = array_merge(
-                    $defaultConsumedContentTypes,
-                    array_keys(get_object_vars($definition->requestBody->content ?? new \stdClass()))
-                );
+                $acceptsParameter = $this->createParameter([
+                    'name' => 'accept',
+                    'in' => 'header',
+                    'required' => true,
+                    'schema' => [
+                        'type' => 'string',
+                        'default' => 'application/json',
+                        'enum' => array_values(array_unique($accepts)),
+                    ],
+                ]);
 
-                $accepts = $defaultProducedContentTypes;
-                foreach ($definition->responses as $response) {
-                    if (!empty($response->content)) {
-                        $accepts = array_unique(array_merge($accepts, array_keys(get_object_vars($response->content))));
-                    }
-                }
+                $requestParameters->addParameter($acceptsParameter);
 
-                $requestParameters = [];
-                foreach ($definition->parameters ?? [] as $parameter) {
-                    $requestParameters[] = $this->createParameter(get_object_vars($parameter));
-                }
-
-                if (!empty($contentTypes) && !empty($definition->requestBody->content->{$contentTypes[0]})) {
-                    $s = $definition->requestBody->content->{$contentTypes[0]};
-                    $s->name = 'body';
-                    $s->in = 'body';
-                    $s->required = true;
-                    $requestParameters[] = $this->createParameter(get_object_vars($s));
-                }
-
-                $responseDefinitions = [];
-                foreach ($definition->responses as $statusCode => $response) {
-                    if (empty($response->content)) {
-                        continue;
-                    }
-
-                    $responseDefinitions[] = $this->createResponseDefinition(
-                        'default' === $statusCode ? $statusCode : (int) $statusCode,
-                        $accepts,
-                        $response
-                    );
-                }
-
-                $definitions[] = new RequestDefinition(
+                $definitions[] = new OperationDefinition(
                     $method,
-                    $definition->operationId,
-                    '/' === $basePath ? $pathTemplate : $basePath.$pathTemplate,
-                    new Parameters($requestParameters),
-                    $contentTypes,
-                    $accepts,
-                    $responseDefinitions
+                    $definition['operationId'] ?? hash('md5', uniqid('', true)),
+                    $pathTemplate,
+                    $requestParameters,
+                    $responses
                 );
             }
         }
 
-        return new RequestDefinitions($definitions);
+        return new OperationDefinitions($definitions);
     }
 
-    protected function createResponseDefinition(
-        int|string $statusCode,
-        array $allowedContentTypes,
-        \stdClass $response
-    ): ResponseDefinition {
-        $parameters = [];
-        if (isset($response->headers)) {
-            foreach ($response->headers as $headerName => $schema) {
-                $schema->in = 'header';
-                $schema->name = $headerName;
-                $schema->required = true;
-                $parameters[] = $this->createParameter(get_object_vars($schema));
+    private function createSecurityDefinitions(array $schema): array
+    {
+        $securities = [];
+        foreach ($schema['security'] as $items) {
+            foreach ($items as $key => $item) {
+                $securityScheme = $schema['components']['securitySchemes'][$key] ?? null;
+                if (null === $securityScheme) {
+                    throw new \LogicException(sprintf('You must define a security scheme with name %s', $key));
+                }
+
+                $securityScheme['type'] = 'string';
+                $securityScheme['name'] = strtolower($securityScheme['name']);
+
+                $securities[] = $this->createParameter($securityScheme);
             }
         }
 
-        if (!empty($response->content)) {
+        return $securities;
+    }
+
+    private function createRequestParameters(array $definition, array $securityDefinitions): Parameters
+    {
+        $requestParameters = array_key_exists('security', $definition) ? [] : $securityDefinitions;
+        foreach ($definition['parameters'] ?? [] as $parameter) {
+            $requestParameters[] = $this->createParameter($parameter);
+        }
+
+        $contentTypes = [];
+        foreach ($definition['requestBody']['content'] ?? [] as $contentType => $content) {
+            $content['name'] = 'body';
+            $content['in'] = 'body';
+            $content['required'] = true;
+            $requestParameters[] = $this->createParameter($content);
+            if (!in_array($contentType, $contentTypes)) {
+                $contentTypes[] = $contentType;
+            }
+        }
+
+        if (!empty($contentTypes)) {
+            $requestParameters[] = $this->createParameter([
+                'name' => 'content-type',
+                'in' => 'header',
+                'required' => true,
+                'schema' => [
+                    'type' => 'string',
+                    'default' => 'application/json',
+                    'enum' => $contentTypes,
+                ],
+            ]);
+        }
+
+        return new Parameters($requestParameters);
+    }
+
+    private function createResponseDefinitions(array $responses): array
+    {
+        $responseDefinitions = [];
+        foreach ($responses as $statusCode => $response) {
+            $responseDefinitions[] = $this->createResponseDefinition($statusCode, $response);
+        }
+
+        return $responseDefinitions;
+    }
+
+    private function createResponseDefinition(int|string $statusCode, array $response): ResponseDefinition
+    {
+        $parameters = [];
+        foreach ($response['headers'] ?? [] as $headerName => $schema) {
+            $schema['in'] = 'header';
+            $schema['name'] = $headerName;
+            $schema['required'] = true;
+            $parameters[] = $this->createParameter($schema);
+        }
+
+        if (!empty($response['content'])) {
+            $schema = [];
+            foreach ($response['content'] as $contentType => $content) {
+                if (!empty($content['schema'])) {
+                    $schema[$contentType] = $content;
+                }
+            }
+
             $parameters[] = $this->createParameter([
                 'in' => 'body',
                 'name' => 'body',
                 'required' => true,
-                'schema' => $response->content->{$allowedContentTypes[0]}->schema,
+                'schema' => $schema,
             ]);
         }
 
-        return new ResponseDefinition($statusCode, $allowedContentTypes, new Parameters($parameters));
-    }
-
-    private function createParameter(array $parameter): Parameter
-    {
-        $name = $parameter['name'];
-        $schema = $parameter['schema'] ?? new \stdClass();
-        $required = $parameter['required'] ?? false;
-        $location = $parameter['in'];
-
-        unset($parameter['in'], $parameter['required'], $parameter['name'], $parameter['schema']);
-
-        // Every remaining parameter may be json schema properties
-        foreach ($parameter as $key => $value) {
-            $schema->{$key} = $value;
-        }
-
-        // It's not relevant to validate file type
-        if (isset($schema->format) && 'file' === $schema->format) {
-            $schema = null;
-        }
-
-        return new Parameter($location, $name, $required, $schema);
+        return new ResponseDefinition($statusCode, new Parameters($parameters));
     }
 }

@@ -2,38 +2,30 @@
 
 declare(strict_types=1);
 
-namespace TwentytwoLabs\Api\Tests\Normalizer;
+namespace TwentytwoLabs\ApiValidator\Tests\Normalizer;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
-use TwentytwoLabs\Api\Normalizer\QueryParamsNormalizer;
+use TwentytwoLabs\ApiValidator\Normalizer\QueryParamsNormalizer;
 
-/**
- * Class QueryParamsNormalizerTest.
- *
- * @codingStandardsIgnoreFile
- *
- * @SuppressWarnings(PHPMD)
- */
-class QueryParamsNormalizerTest extends TestCase
+final class QueryParamsNormalizerTest extends TestCase
 {
     public function testShouldNormalizeQueryParametersWhenThereAreNoParams()
     {
-        $jsonSchema = $this->toObject([
+        $jsonSchema = [
             'type' => 'object',
             'properties' => [],
-        ]);
+        ];
 
         $normalizedValue = QueryParamsNormalizer::normalize(['param' => []], $jsonSchema);
 
         $this->assertSame([], $normalizedValue['param']);
     }
 
-    /**
-     * @dataProvider getValidQueryParameters
-     */
+    #[DataProvider('getValidQueryParameters')]
     public function testShouldNormalizeQueryParameters($schemaType, $actualValue, $expectedValue)
     {
-        $jsonSchema = $this->toObject([
+        $jsonSchema = [
             'type' => 'object',
             'properties' => [
                 'param' => [
@@ -43,7 +35,7 @@ class QueryParamsNormalizerTest extends TestCase
                     'type' => $schemaType,
                 ],
             ],
-        ]);
+        ];
 
         $normalizedValue = QueryParamsNormalizer::normalize(['param' => $actualValue, 'foo' => $actualValue], $jsonSchema);
 
@@ -51,7 +43,7 @@ class QueryParamsNormalizerTest extends TestCase
         $this->assertSame($expectedValue, $normalizedValue['foo']);
     }
 
-    public function getValidQueryParameters(): array
+    public static function getValidQueryParameters(): array
     {
         return [
             // description => [schemaType, actual, expected]
@@ -68,12 +60,10 @@ class QueryParamsNormalizerTest extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider getValidCollectionFormat
-     */
+    #[DataProvider('getValidCollectionFormat')]
     public function testShouldTransformCollectionFormatIntoArray($collectionFormat, $rawValue, array $expectedValue)
     {
-        $jsonSchema = $this->toObject([
+        $jsonSchema = [
             'type' => 'object',
             'properties' => [
                 'param' => [
@@ -82,14 +72,14 @@ class QueryParamsNormalizerTest extends TestCase
                     'collectionFormat' => $collectionFormat,
                 ],
             ],
-        ]);
+        ];
 
         $normalizedValue = QueryParamsNormalizer::normalize(['param' => $rawValue], $jsonSchema);
 
         $this->assertSame($expectedValue, $normalizedValue['param']);
     }
 
-    public function getValidCollectionFormat(): array
+    public static function getValidCollectionFormat(): array
     {
         return [
             'with csv' => ['csv', 'foo,bar,baz', ['foo', 'bar', 'baz']],
@@ -104,7 +94,7 @@ class QueryParamsNormalizerTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('unknown is not a supported query collection format');
 
-        $jsonSchema = $this->toObject([
+        $jsonSchema = [
             'type' => 'object',
             'properties' => [
                 'param' => [
@@ -113,13 +103,8 @@ class QueryParamsNormalizerTest extends TestCase
                     'collectionFormat' => 'unknown',
                 ],
             ],
-        ]);
+        ];
 
         QueryParamsNormalizer::normalize(['param' => 'foo%bar'], $jsonSchema);
-    }
-
-    private function toObject(array $array): \stdClass
-    {
-        return json_decode(json_encode($array));
     }
 }

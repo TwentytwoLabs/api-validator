@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace TwentytwoLabs\Api\Validator\Exception;
+namespace TwentytwoLabs\ApiValidator\Validator\Exception;
 
-use TwentytwoLabs\Api\Validator\ConstraintViolation;
+use TwentytwoLabs\ApiValidator\Validator\ConstraintViolation;
 
-class ConstraintViolations extends \Exception
+final class ConstraintViolations extends \Exception
 {
     /**
      * @var ConstraintViolation[]

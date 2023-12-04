@@ -2,31 +2,23 @@
 
 declare(strict_types=1);
 
-namespace TwentytwoLabs\Api\Tests\Definition;
+namespace TwentytwoLabs\ApiValidator\Tests\Definition;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
-use TwentytwoLabs\Api\Definition\Parameter;
+use TwentytwoLabs\ApiValidator\Definition\Parameter;
 
-/**
- * Class ParameterTest.
- *
- * @codingStandardsIgnoreFile
- *
- * @SuppressWarnings(PHPMD)
- */
-class ParameterTest extends TestCase
+final class ParameterTest extends TestCase
 {
     public function testShouldThrowExceptionBecauseItIsBadLocation()
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('footer is not a supported parameter location, supported: path, header, query, body, formData');
+        $this->expectExceptionMessage('footer is not a supported parameter location, supported: header, path, query, body, formData');
 
         new Parameter('footer', 'bar');
     }
 
-    /**
-     * @dataProvider getData
-     */
+    #[DataProvider('getData')]
     public function testShouldBuildParametersWithDefaultValue(string $location)
     {
         $parameter = new Parameter($location, 'foo');
@@ -34,26 +26,22 @@ class ParameterTest extends TestCase
         $this->assertSame('foo', $parameter->getName());
         $this->assertFalse($parameter->isRequired());
         $this->assertFalse($parameter->hasSchema());
-        $this->assertNull($parameter->getSchema());
+        $this->assertEmpty($parameter->getSchema());
     }
 
-    /**
-     * @dataProvider getData
-     */
-    public function testShouldBuildParameters(string $location, bool $required, ?\stdClass $schema)
+    #[DataProvider('getData')]
+    public function testShouldBuildParameters(string $location, bool $required, array $schema)
     {
         $parameter = new Parameter($location, 'foo', $required, $schema);
         $this->assertSame($location, $parameter->getLocation());
         $this->assertSame('foo', $parameter->getName());
         $this->assertSame($required, $parameter->isRequired());
-        $this->assertSame(null !== $schema, $parameter->hasSchema());
+        $this->assertSame(!empty($schema), $parameter->hasSchema());
         $this->assertSame($schema, $parameter->getSchema());
     }
 
-    /**
-     * @dataProvider getData
-     */
-    public function testShouldSerializable(string $location, bool $required, ?\stdClass $schema)
+    #[DataProvider('getData')]
+    public function testShouldSerializable(string $location, bool $required, array $schema)
     {
         $parameter = new Parameter($location, 'foo', $required, $schema);
 
@@ -62,36 +50,24 @@ class ParameterTest extends TestCase
         $this->assertSame($location, $parameter->getLocation());
         $this->assertSame('foo', $parameter->getName());
         $this->assertSame($required, $parameter->isRequired());
-        $this->assertSame(null !== $schema, $parameter->hasSchema());
+        $this->assertSame(!empty($schema), $parameter->hasSchema());
         $this->assertSame($schema, $parameter->getSchema());
     }
 
-    public function getData(): array
+    public static function getData(): array
     {
         return [
-            ['path', false, null],
-            ['header', false, null],
-            ['query', false, null],
-            ['body', false, null],
-            ['formData', false, null],
+            ['path', false, []],
+            ['header', false, []],
+            ['query', false, []],
+            ['body', false, []],
+            ['formData', false, []],
 
-            ['path', true, null],
-            ['header', true, null],
-            ['query', true, null],
-            ['body', true, null],
-            ['formData', true, null],
-
-            ['path', false, new \stdClass()],
-            ['header', false, new \stdClass()],
-            ['query', false, new \stdClass()],
-            ['body', false, new \stdClass()],
-            ['formData', false, new \stdClass()],
-
-            ['path', true, new \stdClass()],
-            ['header', true, new \stdClass()],
-            ['query', true, new \stdClass()],
-            ['body', true, new \stdClass()],
-            ['formData', true, new \stdClass()],
+            ['path', true, []],
+            ['header', true, []],
+            ['query', true, []],
+            ['body', true, []],
+            ['formData', true, []],
         ];
     }
 }

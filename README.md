@@ -46,9 +46,10 @@ use JsonSchema\Validator;
 use Symfony\Component\Serializer\Encoder\JsonDecode;
 use Symfony\Component\Serializer\Encoder\ChainDecoder;
 use Symfony\Component\Serializer\Encoder\XmlEncoder;
-use TwentytwoLabs\Api\Factory\SwaggerSchemaFactory;
-use TwentytwoLabs\Api\Decoder\Adapter\SymfonyDecoderAdapter;
-use TwentytwoLabs\Api\Validator\MessageValidator;
+use TwentytwoLabs\ApiValidator\Factory\SwaggerSchemaFactory;
+use TwentytwoLabs\ApiValidator\Factory\OpenApiSchemaFactory;
+use TwentytwoLabs\ApiValidator\Decoder\Adapter\SymfonyDecoderAdapter;
+use TwentytwoLabs\ApiValidator\Validator\MessageValidator;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
 
@@ -65,7 +66,7 @@ $validator = new Validator();
 
 // Here we are using decoders provided by the symfony serializer component
 // feel free to use yours if you so desire. You just need to create an adapter that 
-// implement the `TwentytwoLabs\Api\Decoder\DecoderInterface` 
+// implement the `TwentytwoLabs\ApiValidator\Decoder\DecoderInterface` 
 $decoder = new SymfonyDecoderAdapter(
     new ChainDecoder([
         new JsonDecode(),
@@ -74,8 +75,10 @@ $decoder = new SymfonyDecoderAdapter(
 );
 
 // Load a JSON swagger 2.0 schema using the SwaggerSchemaFactory class.
-// We plan to support RAML 1.0 and API Elements (API Blueprint) in the future.
 $schema = (new SwaggerSchemaFactory())->createSchema('file://path/to/your/swagger.json');
+
+// Load a JSON swagger 3.0 schema using the OpenApiSchemaFactory class.
+$schema = (new OpenApiSchemaFactory())->createSchema('file://path/to/your/swagger.json');
 
 // Find the Request Definition in the Schema API
 $requestDefinition = $schema->getRequestDefinition(
@@ -113,19 +116,19 @@ We recommend you to use the [symfony/psr-http-message-bridge](https://github.com
 
 ### Using the schema
 
-You can navigate the `TwentytwoLabs\Api\Schema` to meet other use cases.
+You can navigate the `TwentytwoLabs\ApiValidator\Schema` to meet other use cases.
 
 Example:
 
 ```php
 <?php
-use TwentytwoLabs\Api\Factory\SwaggerSchemaFactory;
+use TwentytwoLabs\ApiValidator\Factory\SwaggerSchemaFactory;
 
 $schema = (new SwaggerSchemaFactory())->createSchema('file://path/to/your/swagger.json');
 
 // Find a request definition from an HTTP method and a path.
-$requestDefinition = $schema->getRequestDefinition(
-    $schema->findOperationId('GET', '/pets/1234')
+$requestDefinition = $schema->getOperationDefinition(
+    $schema->getOperationDefinition(method: 'GET', path: '/pets/1234')
 );
 
 // Get the response definition for the status code 200 (HTTP OK)

@@ -2,15 +2,12 @@
 
 declare(strict_types=1);
 
-namespace TwentytwoLabs\Api\Tests\Validator;
+namespace TwentytwoLabs\ApiValidator\Tests\Validator;
 
 use PHPUnit\Framework\TestCase;
-use TwentytwoLabs\Api\Validator\ConstraintViolation;
+use TwentytwoLabs\ApiValidator\Validator\ConstraintViolation;
 
-/**
- * Class ConstraintViolationTest.
- */
-class ConstraintViolationTest extends TestCase
+final class ConstraintViolationTest extends TestCase
 {
     public function testConstraintViolationToArray()
     {

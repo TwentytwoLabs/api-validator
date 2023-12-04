@@ -2,17 +2,14 @@
 
 declare(strict_types=1);
 
-namespace TwentytwoLabs\Api\Tests\Validator\Exception;
+namespace TwentytwoLabs\ApiValidator\Tests\Validator\Exception;
 
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use TwentytwoLabs\Api\Validator\ConstraintViolation;
-use TwentytwoLabs\Api\Validator\Exception\ConstraintViolations;
+use TwentytwoLabs\ApiValidator\Validator\ConstraintViolation;
+use TwentytwoLabs\ApiValidator\Validator\Exception\ConstraintViolations;
 
-/**
- * Class ConstraintViolationsTest.
- */
-class ConstraintViolationsTest extends TestCase
+final class ConstraintViolationsTest extends TestCase
 {
     public function testShouldNotAddViolation()
     {

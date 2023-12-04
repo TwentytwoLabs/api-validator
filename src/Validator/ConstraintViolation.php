@@ -2,11 +2,8 @@
 
 declare(strict_types=1);
 
-namespace TwentytwoLabs\Api\Validator;
+namespace TwentytwoLabs\ApiValidator\Validator;
 
-/**
- * ValueObject that contains constraint violation properties.
- */
 class ConstraintViolation
 {
     private string $property;

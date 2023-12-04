@@ -2,77 +2,80 @@
 
 declare(strict_types=1);
 
-namespace TwentytwoLabs\Api\Tests\Definition;
+namespace TwentytwoLabs\ApiValidator\Tests\Definition;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
-use TwentytwoLabs\Api\Definition\Parameters;
-use TwentytwoLabs\Api\Definition\ResponseDefinition;
+use TwentytwoLabs\ApiValidator\Definition\Parameter;
+use TwentytwoLabs\ApiValidator\Definition\Parameters;
+use TwentytwoLabs\ApiValidator\Definition\ResponseDefinition;
 
-/**
- * Class ResponseDefinitionTest.
- *
- * @codingStandardsIgnoreFile
- *
- * @SuppressWarnings(PHPMD)
- */
-class ResponseDefinitionTest extends TestCase
+final class ResponseDefinitionTest extends TestCase
 {
-    /**
-     * @dataProvider getStatusCode
-     */
-    public function testShouldValidateGetteur($statusCode, bool $hasBodySchema, bool $hasHeadersSchema)
+    #[DataProvider('getData')]
+    public function testShouldValidateGetteur($statusCode)
     {
-        $bodySchema = new \stdClass();
-        $headerSchema = new \stdClass();
+        $bodySchema = [
+            'application/json' => [
+                'schema' => [
+                    'type' => 'object',
+                    'required' => ['title', 'type', 'file'],
+                    'properties' => [
+                        'title' => ['type' => 'string'],
+                        'type' => ['type' => 'string', 'enum' => ['avatar', 'skill']],
+                        'alternativeText' => ['type' => 'string'],
+                        'file' => ['type' => 'string'],
+                    ],
+                ],
+            ],
+            'application/hal+json' => [
+                'schema' => [
+                    'type' => 'object',
+                    'required' => ['title', 'type', 'file'],
+                    'properties' => [
+                        'title' => ['type' => 'string'],
+                        'type' => ['type' => 'string', 'enum' => ['avatar', 'skill']],
+                        'alternativeText' => ['type' => 'string'],
+                        'file' => ['type' => 'string'],
+                    ],
+                ],
+            ],
+        ];
 
-        $parameters = $this->createMock(Parameters::class);
-        $parameters->expects($this->once())->method('hasBodySchema')->willReturn($hasBodySchema);
-        $parameters->expects($this->once())->method('getBodySchema')->willReturn($bodySchema);
-        $parameters->expects($this->once())->method('hasHeadersSchema')->willReturn($hasHeadersSchema);
-        $parameters->expects($this->once())->method('getHeadersSchema')->willReturn($headerSchema);
+        $body = new Parameter(location: 'body', name: 'body', required: true, schema: $bodySchema);
 
-        $allowedContentTypes = ['application/json', 'application/hal+json'];
-
-        $responseDefinition = new ResponseDefinition($statusCode, $allowedContentTypes, $parameters);
+        $responseDefinition = new ResponseDefinition($statusCode, new Parameters([$body]));
         $this->assertSame($statusCode, $responseDefinition->getStatusCode());
-        $this->assertSame($parameters, $responseDefinition->getParameters());
-        $this->assertSame($hasBodySchema, $responseDefinition->hasBodySchema());
+
+        $this->assertFalse($responseDefinition->hasHeadersSchema());
+        $this->assertSame([], $responseDefinition->getHeadersSchema());
+
+        $this->assertSame(['application/json', 'application/hal+json'], $responseDefinition->getContentTypes());
+
+        $this->assertTrue($responseDefinition->hasBodySchema());
         $this->assertSame($bodySchema, $responseDefinition->getBodySchema());
 
-        $this->assertSame($hasHeadersSchema, $responseDefinition->hasHeadersSchema());
-        $this->assertSame($headerSchema, $responseDefinition->getHeadersSchema());
-
-        $this->assertSame($allowedContentTypes, $responseDefinition->getContentTypes());
+        $parameters = $responseDefinition->getParameters();
+        $this->assertInstanceOf(Parameters::class, $parameters);
+        $this->assertFalse($parameters->hasHeadersSchema());
+        $this->assertSame([], $parameters->getHeadersSchema());
+        $this->assertSame([], $parameters->getHeaders());
+        $this->assertFalse($parameters->hasPathSchema());
+        $this->assertSame([], $parameters->getPathSchema());
+        $this->assertSame([], $parameters->getPath());
+        $this->assertFalse($parameters->hasQueryParametersSchema());
+        $this->assertSame([], $parameters->getQueryParametersSchema());
+        $this->assertSame([], $parameters->getQuery());
+        $this->assertTrue($parameters->hasBodySchema());
+        $this->assertSame($bodySchema, $parameters->getBodySchema());
+        $this->assertSame($body, $parameters->getBody());
     }
 
-    /**
-     * @dataProvider getStatusCode
-     */
-    public function testShouldSerializable($statusCode)
-    {
-        $parameters = $this->createMock(Parameters::class);
-        $parameters->expects($this->never())->method('hasBodySchema');
-        $parameters->expects($this->never())->method('getBodySchema');
-        $parameters->expects($this->never())->method('hasHeadersSchema');
-        $parameters->expects($this->never())->method('getHeadersSchema');
-
-        $allowedContentTypes = ['application/json', 'application/hal+json'];
-
-        $responseDefinition = new ResponseDefinition($statusCode, $allowedContentTypes, $parameters);
-        $this->assertEquals($responseDefinition, unserialize(serialize($responseDefinition)));
-    }
-
-    public function getStatusCode(): array
+    public static function getData(): array
     {
         return [
-            ['200', true, false],
-            [200, true, false],
-            ['200', false, false],
-            [200, false, false],
-            ['200', true, true],
-            [200, true, true],
-            ['200', false, true],
-            [200, false, true],
+            ['200'],
+            [200],
         ];
     }
 }

@@ -2,68 +2,57 @@
 
 declare(strict_types=1);
 
-namespace TwentytwoLabs\Api\Tests;
+namespace TwentytwoLabs\ApiValidator\Tests;
 
 use PHPUnit\Framework\TestCase;
-use TwentytwoLabs\Api\Definition\RequestDefinition;
-use TwentytwoLabs\Api\Definition\RequestDefinitions;
-use TwentytwoLabs\Api\Schema;
+use TwentytwoLabs\ApiValidator\Definition\OperationDefinition;
+use TwentytwoLabs\ApiValidator\Definition\OperationDefinitions;
+use TwentytwoLabs\ApiValidator\Schema;
 
-/**
- * Class SchemaTest.
- */
-class SchemaTest extends TestCase
+final class SchemaTest extends TestCase
 {
-    public function testShouldIterateAvailableOperations()
+    public function testShouldGetOperationDefinitions()
     {
-        $request = $this->createMock(RequestDefinition::class);
+        $request = $this->createMock(OperationDefinition::class);
         $request->expects($this->once())->method('getOperationId')->willReturn('getPet');
 
-        $requests = new RequestDefinitions([$request]);
+        $requests = new OperationDefinitions([$request]);
 
         $schema = new Schema($requests);
 
-        $operations = $schema->getRequestDefinitions();
+        $operations = $schema->getOperationDefinitions();
 
-        $this->assertTrue(is_iterable($operations));
-
-        foreach ($operations as $operationId => $operation) {
-            $this->assertSame('getPet', $operationId);
-        }
+        $this->assertCount(1, iterator_to_array($operations->getIterator()));
     }
 
     public function testShouldResolveAnOperationIdFromAPathTemplateAndMethod()
     {
-        $request = $this->createMock(RequestDefinition::class);
-        $request->expects($this->once())->method('getMethod')->willReturn('GET');
-        $request->expects($this->once())->method('getPathTemplate')->willReturn('/api/pets/{id}');
-        $request->expects($this->once())->method('getOperationId')->willReturn('getPet');
+        $operationDefinition = $this->createMock(OperationDefinition::class);
+        $operationDefinition->expects($this->once())->method('getMethod')->willReturn('GET');
+        $operationDefinition->expects($this->once())->method('getPathTemplate')->willReturn('/api/pets/{id}');
+        $operationDefinition->expects($this->never())->method('getOperationId');
 
-        $requests = $this->createMock(RequestDefinitions::class);
-        $requests->expects($this->once())->method('getIterator')->willReturn(new \ArrayIterator([$request]));
+        $operationDefinitions = $this->createMock(OperationDefinitions::class);
+        $operationDefinitions->expects($this->once())->method('getIterator')->willReturn(new \ArrayIterator([$operationDefinition]));
 
-        $schema = new Schema($requests);
+        $schema = new Schema($operationDefinitions);
 
-        $operationId = $schema->findOperationId('GET', '/api/pets/1234');
-
-        $this->assertSame('getPet', $operationId);
+        $this->assertSame($operationDefinition, $schema->getOperationDefinition(method: 'GET', path: '/api/pets/1234'));
     }
 
     public function testShouldResolveAnOperationIdFromAPathAndMethod()
     {
-        $request = $this->createMock(RequestDefinition::class);
-        $request->expects($this->once())->method('getMethod')->willReturn('GET');
-        $request->expects($this->once())->method('getPathTemplate')->willReturn('/api/pets');
-        $request->expects($this->once())->method('getOperationId')->willReturn('getPets');
+        $operationDefinition = $this->createMock(OperationDefinition::class);
+        $operationDefinition->expects($this->once())->method('getMethod')->willReturn('GET');
+        $operationDefinition->expects($this->once())->method('getPathTemplate')->willReturn('/api/pets');
+        $operationDefinition->expects($this->never())->method('getOperationId');
 
-        $requests = $this->createMock(RequestDefinitions::class);
-        $requests->expects($this->once())->method('getIterator')->willReturn(new \ArrayIterator([$request]));
+        $operationDefinitions = $this->createMock(OperationDefinitions::class);
+        $operationDefinitions->expects($this->once())->method('getIterator')->willReturn(new \ArrayIterator([$operationDefinition]));
 
-        $schema = new Schema($requests);
+        $schema = new Schema($operationDefinitions);
 
-        $operationId = $schema->findOperationId('GET', '/api/pets');
-
-        $this->assertSame('getPets', $operationId);
+        $this->assertSame($operationDefinition, $schema->getOperationDefinition(method: 'GET', path: '/api/pets'));
     }
 
     public function testShouldThrowAnExceptionWhenNoOperationIdCanBeResolvedBecauseRequestStackIsEmpty()
@@ -71,10 +60,10 @@ class SchemaTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Unable to resolve the operationId for path /api/pets/1234');
 
-        $requests = new RequestDefinitions();
+        $requests = new OperationDefinitions();
 
         $schema = new Schema($requests, '/api');
-        $schema->findOperationId('GET', '/api/pets/1234');
+        $schema->getOperationDefinition(method: 'GET', path: '/api/pets/1234');
     }
 
     public function testShouldThrowAnExceptionWhenNoOperationIdCanBeResolvedBecauseMethodNotMatching()
@@ -82,20 +71,20 @@ class SchemaTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Unable to resolve the operationId for path /api');
 
-        $request = $this->createMock(RequestDefinition::class);
+        $request = $this->createMock(OperationDefinition::class);
         $request->expects($this->once())->method('getMethod')->willReturn('POST');
         $request->expects($this->never())->method('getPathTemplate');
 
-        $requestSecond = $this->createMock(RequestDefinition::class);
+        $requestSecond = $this->createMock(OperationDefinition::class);
         $requestSecond->expects($this->once())->method('getMethod')->willReturn('DELETE');
         $requestSecond->expects($this->never())->method('getPathTemplate');
 
-        $requests = $this->createMock(RequestDefinitions::class);
+        $requests = $this->createMock(OperationDefinitions::class);
         $requests->expects($this->once())->method('getIterator')->willReturn(new \ArrayIterator([$request, $requestSecond]));
 
         $schema = new Schema($requests);
 
-        $schema->findOperationId('GET', '/api');
+        $schema->getOperationDefinition(method: 'GET', path: '/api');
     }
 
     public function testShouldThrowAnExceptionWhenNoOperationIdCanBeResolvedBecausePathNotMatching()
@@ -103,31 +92,31 @@ class SchemaTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Unable to resolve the operationId for path /api');
 
-        $request = $this->createMock(RequestDefinition::class);
+        $request = $this->createMock(OperationDefinition::class);
         $request->expects($this->once())->method('getMethod')->willReturn('GET');
         $request->expects($this->once())->method('getPathTemplate')->willReturn('/test');
 
-        $requestSecond = $this->createMock(RequestDefinition::class);
+        $requestSecond = $this->createMock(OperationDefinition::class);
         $requestSecond->expects($this->once())->method('getMethod')->willReturn('DELETE');
         $requestSecond->expects($this->never())->method('getPathTemplate');
 
-        $requests = $this->createMock(RequestDefinitions::class);
+        $requests = $this->createMock(OperationDefinitions::class);
         $requests->expects($this->once())->method('getIterator')->willReturn(new \ArrayIterator([$request, $requestSecond]));
 
         $schema = new Schema($requests);
 
-        $schema->findOperationId('GET', '/api');
+        $schema->getOperationDefinition(method: 'GET', path: '/api');
     }
 
     public function testShouldProvideARequestDefinition()
     {
-        $request = $this->createMock(RequestDefinition::class);
+        $request = $this->createMock(OperationDefinition::class);
         $request->expects($this->once())->method('getOperationId')->willReturn('getPet');
 
-        $requests = new RequestDefinitions([$request]);
+        $requests = new OperationDefinitions([$request]);
 
         $schema = new Schema($requests, '/api');
-        $actual = $schema->getRequestDefinition('getPet');
+        $actual = $schema->getOperationDefinition('getPet');
 
         $this->assertEquals($request, $actual);
     }
@@ -137,18 +126,9 @@ class SchemaTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Unable to find request definition for operationId getPet');
 
-        $requests = new RequestDefinitions();
+        $requests = new OperationDefinitions();
 
         $schema = new Schema($requests, '/api');
-        $schema->getRequestDefinition('getPet');
-    }
-
-    public function testShouldSerialized()
-    {
-        $requests = new RequestDefinitions();
-
-        $schema = new Schema($requests);
-
-        $this->assertEquals($schema, unserialize(serialize($schema)));
+        $schema->getOperationDefinition('getPet');
     }
 }

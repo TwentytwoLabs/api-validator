@@ -2,100 +2,172 @@
 
 declare(strict_types=1);
 
-namespace TwentytwoLabs\Api\Tests\Definition;
+namespace TwentytwoLabs\ApiValidator\Tests\Definition;
 
 use PHPUnit\Framework\TestCase;
-use TwentytwoLabs\Api\Definition\Parameter;
-use TwentytwoLabs\Api\Definition\Parameters;
+use TwentytwoLabs\ApiValidator\Definition\Parameter;
+use TwentytwoLabs\ApiValidator\Definition\Parameters;
 
-/**
- * Class ParametersTest.
- *
- * @codingStandardsIgnoreFile
- *
- * @SuppressWarnings(PHPMD)
- */
-class ParametersTest extends TestCase
+final class ParametersTest extends TestCase
 {
     public function testShouldBuildParametersWithoutParameters()
     {
         $parameters = new Parameters([]);
-        $this->assertFalse($parameters->hasBodySchema());
-        $this->assertNull($parameters->getBodySchema());
-
-        $this->assertFalse($parameters->hasPathSchema());
-        $this->assertNull($parameters->getPathSchema());
-
-        $this->assertFalse($parameters->hasQueryParametersSchema());
-        $this->assertNull($parameters->getQueryParametersSchema());
 
         $this->assertFalse($parameters->hasHeadersSchema());
-        $this->assertNull($parameters->getHeadersSchema());
+        $this->assertSame([], $parameters->getHeadersSchema());
+        $this->assertSame([], $parameters->getHeaders());
+
+        $this->assertFalse($parameters->hasPathSchema());
+        $this->assertSame([], $parameters->getPathSchema());
+        $this->assertSame([], $parameters->getPath());
+
+        $this->assertFalse($parameters->hasQueryParametersSchema());
+        $this->assertSame([], $parameters->getQueryParametersSchema());
+        $this->assertSame([], $parameters->getQuery());
+
+        $this->assertFalse($parameters->hasBodySchema());
+        $this->assertSame([], $parameters->getBodySchema());
+        $this->assertNull($parameters->getBody());
+
         $this->assertNull($parameters->getByName('foo'));
     }
 
-    public function testShouldBuildParameters()
+    public function testShouldBuildParametersForCollectionOperation()
     {
-        $schemaFoo = new \stdClass();
-        $schemaBar = new \stdClass();
+        $parameterUid = new Parameter(location: 'header', name: 'x-uid', schema: ['type' => 'string']);
+        $parameterContentType = new Parameter(location: 'header', name: 'content-type', required: true, schema: ['type' => 'string', 'default' => 'application/json', 'enum' => ['application/json']]);
+        $parameterPage = new Parameter(location: 'query', name: 'page', schema: ['type' => 'integer', 'default' => 1]);
+        $parameterItemsPerPage = new Parameter(location: 'query', name: 'itemsPerPage', schema: ['type' => 'integer', 'default' => 30]);
 
-        $parameterFoo = $this->createMock(Parameter::class);
-        $parameterFoo->expects($this->atLeastOnce())->method('getName')->willReturn('foo');
-        $parameterFoo->expects($this->atLeastOnce())->method('getLocation')->willReturn('path');
-        $parameterFoo->expects($this->atLeastOnce())->method('isRequired')->willReturn(true);
-        $parameterFoo->expects($this->atLeastOnce())->method('getSchema')->willReturn($schemaFoo);
-
-        $parameterBar = $this->createMock(Parameter::class);
-        $parameterBar->expects($this->atLeastOnce())->method('getName')->willReturn('bar');
-        $parameterBar->expects($this->atLeastOnce())->method('getLocation')->willReturn('body');
-        $parameterBar->expects($this->never())->method('isRequired');
-        $parameterBar->expects($this->atLeastOnce())->method('getSchema')->willReturn($schemaBar);
-        $parameterBar->expects($this->atLeastOnce())->method('hasSchema')->willReturn(true);
-
-        $parameters = new Parameters([$parameterFoo, $parameterBar]);
-        $this->assertCount(2, $parameters);
+        $parameters = new Parameters([$parameterUid, $parameterContentType, $parameterPage, $parameterItemsPerPage]);
+        $this->assertCount(4, iterator_to_array($parameters->getIterator()));
         foreach ($parameters as $name => $parameter) {
-            $this->assertTrue(\in_array($name, ['foo', 'bar']));
+            $this->assertTrue(\in_array($name, ['x-uid', 'content-type', 'page', 'itemsPerPage']));
             $this->assertInstanceOf(Parameter::class, $parameter);
         }
-        $this->assertTrue($parameters->hasBodySchema());
-        $this->assertSame($schemaBar, $parameters->getBodySchema());
 
-        $this->assertTrue($parameters->hasPathSchema());
+        $this->assertTrue($parameters->hasHeadersSchema());
         $this->assertSame(
-            ['type' => 'object', 'required' => ['foo'], 'properties' => ['foo' => []]],
-            json_decode(json_encode($parameters->getPathSchema()), true)
+            [
+                'type' => 'object',
+                'required' => ['content-type'],
+                'properties' => [
+                    'x-uid' => ['type' => 'string'],
+                    'content-type' => [
+                        'type' => 'string',
+                        'default' => 'application/json',
+                        'enum' => ['application/json'],
+                    ],
+                ],
+            ],
+            $parameters->getHeadersSchema()
+        );
+        $this->assertSame(
+            ['x-uid' => $parameterUid, 'content-type' => $parameterContentType],
+            $parameters->getHeaders()
         );
 
-        $this->assertFalse($parameters->hasQueryParametersSchema());
-        $this->assertNull($parameters->getQueryParametersSchema());
+        $this->assertFalse($parameters->hasPathSchema());
+        $this->assertSame([], $parameters->getPathSchema());
+        $this->assertSame([], $parameters->getPath());
 
-        $this->assertFalse($parameters->hasHeadersSchema());
-        $this->assertNull($parameters->getHeadersSchema());
-        $this->assertSame(['foo' => $parameterFoo], $parameters->getPath());
-        $this->assertSame([], $parameters->getQuery());
+        $this->assertTrue($parameters->hasQueryParametersSchema());
+        $this->assertSame(
+            [
+                'type' => 'object',
+                'required' => [],
+                'properties' => [
+                    'page' => ['type' => 'integer', 'default' => 1],
+                    'itemsPerPage' => ['type' => 'integer', 'default' => 30],
+                ],
+            ],
+            $parameters->getQueryParametersSchema()
+        );
+        $this->assertSame(
+            ['page' => $parameterPage, 'itemsPerPage' => $parameterItemsPerPage],
+            $parameters->getQuery()
+        );
 
-        $this->assertSame($parameterFoo, $parameters->getByName('foo'));
-        $this->assertSame([], $parameters->getHeaders());
-        $this->assertSame($parameterBar, $parameters->getBody());
+        $this->assertFalse($parameters->hasBodySchema());
+        $this->assertSame([], $parameters->getBodySchema());
+        $this->assertNull($parameters->getBody());
+
+        $this->assertSame($parameterItemsPerPage, $parameters->getByName('itemsPerPage'));
+        $this->assertNull($parameters->getByName('enabled'));
     }
 
-    public function testShouldSerializable()
+    public function testShouldBuildParametersForCreationOperation()
     {
-        $parameterFoo = $this->createMock(Parameter::class);
-        $parameterFoo->expects($this->atLeastOnce())->method('getName')->willReturn('foo');
-        $parameterFoo->expects($this->never())->method('getLocation');
-        $parameterFoo->expects($this->never())->method('isRequired');
-        $parameterFoo->expects($this->never())->method('getSchema');
+        $parameterUid = new Parameter(location: 'header', name: 'x-uid', schema: ['type' => 'string']);
+        $parameterContentType = new Parameter(location: 'header', name: 'content-type', required: true, schema: ['type' => 'string', 'default' => 'application/json', 'enum' => ['application/json']]);
+        $parameterBody = new Parameter(
+            location: 'body',
+            name: 'body',
+            required: true,
+            schema: [
+                'type' => 'object',
+                'properties' => [
+                    'title' => ['type' => 'string'],
+                    'type' => ['type' => 'string', 'enum' => ['avatar', 'skill']],
+                    'alternativeText' => ['type' => 'string'],
+                    'file' => ['type' => 'string'],
+                ],
+            ]
+        );
 
-        $parameterBar = $this->createMock(Parameter::class);
-        $parameterBar->expects($this->atLeastOnce())->method('getName')->willReturn('bar');
-        $parameterBar->expects($this->never())->method('getLocation');
-        $parameterBar->expects($this->never())->method('isRequired');
-        $parameterBar->expects($this->never())->method('getSchema');
+        $parameters = new Parameters([$parameterUid, $parameterContentType, $parameterBody]);
+        $this->assertCount(3, iterator_to_array($parameters->getIterator()));
+        foreach ($parameters as $name => $parameter) {
+            $this->assertTrue(\in_array($name, ['x-uid', 'content-type', 'body']));
+            $this->assertInstanceOf(Parameter::class, $parameter);
+        }
 
-        $parameters = new Parameters([$parameterFoo, $parameterBar]);
+        $this->assertTrue($parameters->hasHeadersSchema());
+        $this->assertSame(
+            [
+                'type' => 'object',
+                'required' => ['content-type'],
+                'properties' => [
+                    'x-uid' => ['type' => 'string'],
+                    'content-type' => [
+                        'type' => 'string',
+                        'default' => 'application/json',
+                        'enum' => ['application/json'],
+                    ],
+                ],
+            ],
+            $parameters->getHeadersSchema()
+        );
+        $this->assertSame(
+            ['x-uid' => $parameterUid, 'content-type' => $parameterContentType],
+            $parameters->getHeaders()
+        );
 
-        $this->assertEquals($parameters, unserialize(serialize($parameters)));
+        $this->assertFalse($parameters->hasPathSchema());
+        $this->assertSame([], $parameters->getPathSchema());
+        $this->assertSame([], $parameters->getPath());
+
+        $this->assertFalse($parameters->hasQueryParametersSchema());
+        $this->assertSame([], $parameters->getQueryParametersSchema());
+        $this->assertSame([], $parameters->getQuery());
+
+        $this->assertTrue($parameters->hasBodySchema());
+        $this->assertSame(
+            [
+                'type' => 'object',
+                'properties' => [
+                    'title' => ['type' => 'string'],
+                    'type' => ['type' => 'string', 'enum' => ['avatar', 'skill']],
+                    'alternativeText' => ['type' => 'string'],
+                    'file' => ['type' => 'string'],
+                ],
+            ],
+            $parameters->getBodySchema()
+        );
+        $this->assertSame($parameterBody, $parameters->getBody());
+
+        $this->assertSame($parameterBody, $parameters->getByName('body'));
+        $this->assertNull($parameters->getByName('enabled'));
     }
 }

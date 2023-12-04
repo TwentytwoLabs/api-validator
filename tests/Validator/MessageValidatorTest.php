@@ -2,550 +2,904 @@
 
 declare(strict_types=1);
 
-namespace TwentytwoLabs\Api\Tests\Validator;
+namespace TwentytwoLabs\ApiValidator\Tests\Validator;
 
 use JsonSchema\Validator;
-use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\StreamInterface;
 use Psr\Http\Message\UriInterface;
-use TwentytwoLabs\Api\Decoder\DecoderInterface;
-use TwentytwoLabs\Api\Definition\RequestDefinition;
-use TwentytwoLabs\Api\Definition\ResponseDefinition;
-use TwentytwoLabs\Api\Validator\ConstraintViolation;
-use TwentytwoLabs\Api\Validator\MessageValidator;
+use TwentytwoLabs\ApiValidator\Decoder\DecoderInterface;
+use TwentytwoLabs\ApiValidator\Definition\OperationDefinition;
+use TwentytwoLabs\ApiValidator\Definition\ResponseDefinition;
+use TwentytwoLabs\ApiValidator\Validator\ConstraintViolation;
+use TwentytwoLabs\ApiValidator\Validator\MessageValidator;
 
-/**
- * Class RequestValidatorTest.
- */
-class MessageValidatorTest extends TestCase
+final class MessageValidatorTest extends TestCase
 {
     private Validator $validator;
     private DecoderInterface $decoder;
-    private RequestInterface $request;
-    private RequestDefinition $requestDefinition;
 
     protected function setUp(): void
     {
         $this->validator = $this->createMock(Validator::class);
         $this->decoder = $this->createMock(DecoderInterface::class);
-        $this->request = $this->createMock(RequestInterface::class);
-        $this->requestDefinition = $this->createMock(RequestDefinition::class);
     }
 
-    public function testShouldValidateRequestWithoutBodySchema()
+    public function testShouldNotValidateRequestForGetCollectionBecauseContentTypeIsNotMatching()
     {
-        $this->request->expects($this->never())->method('getHeaderLine');
-        $this->request->expects($this->never())->method('getMethod');
+        $headersSchema = [
+            'type' => 'object',
+            'required' => ['content-type'],
+            'properties' => [
+                'x-uid' => ['type' => 'string'],
+                'type' => ['type' => 'string', 'default' => 'application/json', 'enum' => ['application/json']],
+                'cache-control' => ['type' => 'string'],
+            ],
+        ];
+        $headers = [
+            'Content-Type' => ['application/ld+json'],
+            'X-uid' => ['114e010'],
+            'Cache-Control' => ['no-cache', 'no-store', 'must-revalidate'],
+        ];
 
-        $this->request->expects($this->never())->method('getBody');
+        $request = $this->createMock(RequestInterface::class);
+        $request->expects($this->never())->method('getUri');
+        $request->expects($this->once())->method('getHeaders')->willReturn($headers);
+        $request->expects($this->never())->method('getHeaderLine');
+        $request->expects($this->never())->method('getMethod');
+        $request->expects($this->never())->method('getBody');
 
-        $this->requestDefinition->expects($this->once())->method('hasBodySchema')->willReturn(false);
-        $this->requestDefinition->expects($this->never())->method('getBodySchema');
-        $this->requestDefinition->expects($this->never())->method('getContentTypes');
-        $this->requestDefinition->expects($this->once())->method('hasHeadersSchema')->willReturn(false);
-        $this->requestDefinition->expects($this->once())->method('hasPathSchema')->willReturn(false);
-        $this->requestDefinition->expects($this->once())->method('hasQueryParametersSchema')->willReturn(false);
+        $requestDefinition = $this->createMock(OperationDefinition::class);
+
+        $requestDefinition->expects($this->once())->method('hasHeadersSchema')->willReturn(true);
+        $requestDefinition->expects($this->once())->method('getHeadersSchema')->willReturn($headersSchema);
+
+        $requestDefinition->expects($this->once())->method('hasPathSchema')->willReturn(false);
+        $requestDefinition->expects($this->never())->method('getPathTemplate');
+        $requestDefinition->expects($this->never())->method('getPathSchema');
+
+        $requestDefinition->expects($this->once())->method('hasQueryParametersSchema')->willReturn(false);
+        $requestDefinition->expects($this->never())->method('getQueryParametersSchema');
+
+        $requestDefinition->expects($this->exactly(1))->method('hasBodySchema')->willReturn(false);
+
+        $requestDefinition->expects($this->never())->method('getContentTypes');
 
         $this->decoder->expects($this->never())->method('decode');
-        $this->validator->expects($this->never())->method('isValid');
 
-        $messageValidator = new MessageValidator($this->validator, $this->decoder);
-        $messageValidator->validateRequest($this->request, $this->requestDefinition);
+        $this->validator->expects($this->once())->method('check')->willReturnCallback(function ($value, $schema) {
+            $this->assertInstanceOf(\stdClass::class, $value);
+            $this->assertInstanceOf(\stdClass::class, $schema);
+
+            $value = json_decode(json_encode($value), true);
+            $schema = json_decode(json_encode($schema), true);
+
+            $this->assertSame(
+                [
+                    'content-type' => 'application/ld+json',
+                    'x-uid' => '114e010',
+                    'cache-control' => 'no-cache, no-store, must-revalidate',
+                ],
+                $value
+            );
+
+            $this->assertSame(
+                [
+                    'type' => 'object',
+                    'required' => ['content-type'],
+                    'properties' => [
+                        'x-uid' => ['type' => 'string'],
+                        'type' => ['type' => 'string', 'default' => 'application/json', 'enum' => ['application/json']],
+                        'cache-control' => ['type' => 'string'],
+                    ],
+                ],
+                $schema
+            );
+        });
+        $this->validator->expects($this->once())->method('isValid')->willReturn(false);
+        $this->validator->expects($this->once())->method('reset');
+        $this->validator->expects($this->once())->method('getErrors')->willReturn([
+            [
+                'property' => 'content-type',
+                'pointer' => '/content-type',
+                'message' => 'Does not have a value in the enumeration ["application\/json"]',
+                'constraint' => 'enum',
+                'context' => 1,
+                'enum' => ['application/json'],
+            ],
+        ]);
+
+        $messageValidator = $this->getValidator();
+        $messageValidator->validateRequest($request, $requestDefinition);
+        $this->assertTrue($messageValidator->hasViolations());
+        $violations = $messageValidator->getViolations();
+        $this->assertIsArray($violations);
+        $this->assertCount(1, $violations);
+        $violation = $violations[0];
+        $this->assertInstanceOf(ConstraintViolation::class, $violation);
+        $this->assertSame('content-type', $violation->getProperty());
+        $this->assertSame('Does not have a value in the enumeration ["application\/json"]', $violation->getMessage());
+        $this->assertSame('enum', $violation->getConstraint());
+        $this->assertSame('header', $violation->getLocation());
+        $this->assertSame(
+            [
+                'property' => 'content-type',
+                'message' => 'Does not have a value in the enumeration ["application\/json"]',
+                'constraint' => 'enum',
+                'location' => 'header',
+            ],
+            $violation->toArray()
+        );
     }
 
-    public function testShouldValidateRequestWithContentTypeInvalid()
+    public function testShouldValidateRequestForGetCollection()
     {
-        $this->request->expects($this->exactly(2))->method('getHeaderLine')->willReturn('application/hal+json');
-        $this->request->expects($this->never())->method('getMethod');
-        $this->request->expects($this->never())->method('getBody');
+        $guerySchema = [
+            'type' => 'object',
+            'required' => [],
+            'properties' => [
+                'force' => ['type' => 'boolean', 'default' => false],
+                'page' => ['type' => 'integer', 'default' => 1],
+                'itemsPerPage' => ['type' => 'integer', 'default' => 30, 'minimum' => 0],
+            ],
+        ];
+        $query = 'page=1&itemsPerPage=10';
 
-        $this->requestDefinition->expects($this->once())->method('hasBodySchema')->willReturn(true);
-        $this->requestDefinition->expects($this->never())->method('getBodySchema');
-        $this->requestDefinition->expects($this->once())->method('getContentTypes')->willReturn(['application/json']);
-        $this->requestDefinition->expects($this->once())->method('hasHeadersSchema')->willReturn(false);
-        $this->requestDefinition->expects($this->once())->method('hasPathSchema')->willReturn(false);
-        $this->requestDefinition->expects($this->once())->method('hasQueryParametersSchema')->willReturn(false);
+        $uri = $this->createMock(UriInterface::class);
+        $uri->expects($this->never())->method('getPath');
+        $uri->expects($this->once())->method('getQuery')->willReturn($query);
+
+        $request = $this->createMock(RequestInterface::class);
+        $request->expects($this->once())->method('getUri')->willReturn($uri);
+        $request->expects($this->never())->method('getHeaders');
+        $request->expects($this->never())->method('getHeaderLine');
+        $request->expects($this->never())->method('getMethod');
+        $request->expects($this->never())->method('getBody');
+
+        $requestDefinition = $this->createMock(OperationDefinition::class);
+
+        $requestDefinition->expects($this->once())->method('hasHeadersSchema')->willReturn(false);
+        $requestDefinition->expects($this->never())->method('getHeadersSchema');
+
+        $requestDefinition->expects($this->once())->method('hasPathSchema')->willReturn(false);
+        $requestDefinition->expects($this->never())->method('getPathTemplate');
+        $requestDefinition->expects($this->never())->method('getPathSchema');
+
+        $requestDefinition->expects($this->once())->method('hasQueryParametersSchema')->willReturn(true);
+        $requestDefinition->expects($this->once())->method('getQueryParametersSchema')->willReturn($guerySchema);
+
+        $requestDefinition->expects($this->exactly(1))->method('hasBodySchema')->willReturn(false);
+
+        $requestDefinition->expects($this->never())->method('getContentTypes');
 
         $this->decoder->expects($this->never())->method('decode');
-        $this->validator->expects($this->never())->method('isValid');
 
-        $messageValidator = new MessageValidator($this->validator, $this->decoder);
-        $messageValidator->validateRequest($this->request, $this->requestDefinition);
+        $this->validator->expects($this->once())->method('check')->willReturnCallback(function ($value, $schema) {
+            $this->assertInstanceOf(\stdClass::class, $value);
+            $this->assertInstanceOf(\stdClass::class, $schema);
+
+            $value = json_decode(json_encode($value), true);
+            $schema = json_decode(json_encode($schema), true);
+
+            $this->assertSame(['page' => 1, 'itemsPerPage' => 10], $value);
+            $this->assertSame(
+                [
+                    'type' => 'object',
+                    'required' => [],
+                    'properties' => [
+                        'force' => ['type' => 'boolean', 'default' => false],
+                        'page' => ['type' => 'integer', 'default' => 1],
+                        'itemsPerPage' => ['type' => 'integer', 'default' => 30, 'minimum' => 0],
+                    ],
+                ],
+                $schema
+            );
+        });
+        $this->validator->expects($this->once())->method('isValid')->willReturn(true);
+        $this->validator->expects($this->never())->method('getErrors');
+        $this->validator->expects($this->once())->method('reset');
+
+        $messageValidator = $this->getValidator();
+        $messageValidator->validateRequest($request, $requestDefinition);
+        $this->assertFalse($messageValidator->hasViolations());
+        $this->assertSame([], $messageValidator->getViolations());
     }
 
-    public function testShouldValidateRequestWithGetMethod()
+    public function testShouldValidateRequestForGetCollectionWithNormalizer()
     {
-        $this->request->expects($this->once())->method('getHeaderLine')->willReturn('application/json');
-        $this->request->expects($this->once())->method('getMethod')->willReturn('GET');
-        $this->request->expects($this->never())->method('getBody');
+        $guerySchema = [
+            'type' => 'object',
+            'required' => [],
+            'properties' => [
+                'force' => ['type' => 'boolean', 'default' => false],
+                'page' => ['type' => 'integer', 'default' => 1],
+                'itemsPerPage' => ['type' => 'integer', 'default' => 30, 'minimum' => 0],
+            ],
+        ];
+        $query = 'page=1&itemsPerPage=10';
 
-        $this->requestDefinition->expects($this->once())->method('hasBodySchema')->willReturn(true);
-        $this->requestDefinition->expects($this->never())->method('getBodySchema');
-        $this->requestDefinition->expects($this->once())->method('getContentTypes')->willReturn(['application/json']);
-        $this->requestDefinition->expects($this->once())->method('hasHeadersSchema')->willReturn(false);
-        $this->requestDefinition->expects($this->once())->method('hasPathSchema')->willReturn(false);
-        $this->requestDefinition->expects($this->once())->method('hasQueryParametersSchema')->willReturn(false);
+        $uri = $this->createMock(UriInterface::class);
+        $uri->expects($this->never())->method('getPath');
+        $uri->expects($this->once())->method('getQuery')->willReturn($query);
+
+        $request = $this->createMock(RequestInterface::class);
+        $request->expects($this->once())->method('getUri')->willReturn($uri);
+        $request->expects($this->never())->method('getHeaders');
+        $request->expects($this->never())->method('getHeaderLine');
+        $request->expects($this->never())->method('getMethod');
+        $request->expects($this->never())->method('getBody');
+
+        $requestDefinition = $this->createMock(OperationDefinition::class);
+
+        $requestDefinition->expects($this->once())->method('hasHeadersSchema')->willReturn(false);
+        $requestDefinition->expects($this->never())->method('getHeadersSchema');
+
+        $requestDefinition->expects($this->once())->method('hasPathSchema')->willReturn(false);
+        $requestDefinition->expects($this->never())->method('getPathTemplate');
+        $requestDefinition->expects($this->never())->method('getPathSchema');
+
+        $requestDefinition->expects($this->once())->method('hasQueryParametersSchema')->willReturn(true);
+        $requestDefinition->expects($this->once())->method('getQueryParametersSchema')->willReturn($guerySchema);
+
+        $requestDefinition->expects($this->exactly(1))->method('hasBodySchema')->willReturn(false);
+
+        $requestDefinition->expects($this->never())->method('getContentTypes');
 
         $this->decoder->expects($this->never())->method('decode');
-        $this->validator->expects($this->never())->method('isValid');
 
-        $messageValidator = new MessageValidator($this->validator, $this->decoder);
-        $messageValidator->validateRequest($this->request, $this->requestDefinition);
+        $this->validator->expects($this->once())->method('check')->willReturnCallback(function ($value, $schema) {
+            $this->assertInstanceOf(\stdClass::class, $value);
+            $this->assertInstanceOf(\stdClass::class, $schema);
+
+            $this->assertSame(['page' => 1, 'itemsPerPage' => 10], json_decode(json_encode($value), true));
+            $this->assertSame(
+                [
+                    'type' => 'object',
+                    'required' => [],
+                    'properties' => [
+                        'force' => ['type' => 'boolean', 'default' => false],
+                        'page' => ['type' => 'integer', 'default' => 1],
+                        'itemsPerPage' => ['type' => 'integer', 'default' => 30, 'minimum' => 0],
+                    ],
+                ],
+                json_decode(json_encode($schema), true)
+            );
+        });
+        $this->validator->expects($this->once())->method('isValid')->willReturn(true);
+        $this->validator->expects($this->never())->method('getErrors');
+        $this->validator->expects($this->once())->method('reset');
+
+        $messageValidator = $this->getValidator();
+        $messageValidator->validateRequest($request, $requestDefinition);
+        $this->assertFalse($messageValidator->hasViolations());
+        $this->assertSame([], $messageValidator->getViolations());
     }
 
-    /**
-     * @dataProvider dataProviderTestShouldValidateRequestWithMethods
-     */
-    public function testShouldValidateRequestWithMethods(string $method)
+    public function testShouldValidateRequestForGetItem()
     {
+        $pathSchema = [
+            'type' => 'object',
+            'required' => ['id'],
+            'properties' => [
+                'id' => ['type' => 'string'],
+            ],
+        ];
+        $pathTemplate = '/features/{id}';
+        $path = '/features/1';
+
+        $uri = $this->createMock(UriInterface::class);
+        $uri->expects($this->once())->method('getPath')->willReturn($path);
+        $uri->expects($this->never())->method('getQuery');
+
+        $request = $this->createMock(RequestInterface::class);
+        $request->expects($this->once())->method('getUri')->willReturn($uri);
+        $request->expects($this->never())->method('getHeaders');
+        $request->expects($this->never())->method('getHeaderLine');
+        $request->expects($this->never())->method('getMethod');
+        $request->expects($this->never())->method('getBody');
+
+        $requestDefinition = $this->createMock(OperationDefinition::class);
+
+        $requestDefinition->expects($this->once())->method('hasHeadersSchema')->willReturn(false);
+        $requestDefinition->expects($this->never())->method('getHeadersSchema');
+
+        $requestDefinition->expects($this->once())->method('hasPathSchema')->willReturn(true);
+        $requestDefinition->expects($this->once())->method('getPathTemplate')->willReturn($pathTemplate);
+        $requestDefinition->expects($this->once())->method('getPathSchema')->willReturn($pathSchema);
+
+        $requestDefinition->expects($this->once())->method('hasQueryParametersSchema')->willReturn(false);
+        $requestDefinition->expects($this->never())->method('getQueryParametersSchema');
+
+        $requestDefinition->expects($this->once())->method('hasBodySchema')->willReturn(false);
+
+        $requestDefinition->expects($this->never())->method('getContentTypes');
+
+        $this->decoder->expects($this->never())->method('decode');
+
+        $this->validator->expects($this->once())->method('check')->willReturnCallback(function ($value, $schema) {
+            $this->assertInstanceOf(\stdClass::class, $value);
+            $this->assertInstanceOf(\stdClass::class, $schema);
+
+            $value = json_decode(json_encode($value), true);
+            $schema = json_decode(json_encode($schema), true);
+
+            $this->assertSame(['id' => '1'], $value);
+            $this->assertSame(
+                [
+                    'type' => 'object',
+                    'required' => ['id'],
+                    'properties' => [
+                        'id' => ['type' => 'string'],
+                    ],
+                ],
+                $schema
+            );
+        });
+        $this->validator->expects($this->once())->method('isValid')->willReturn(true);
+        $this->validator->expects($this->never())->method('getErrors');
+        $this->validator->expects($this->once())->method('reset');
+
+        $messageValidator = $this->getValidator();
+        $messageValidator->validateRequest($request, $requestDefinition);
+        $this->assertFalse($messageValidator->hasViolations());
+        $this->assertSame([], $messageValidator->getViolations());
+    }
+
+    public function testShouldNotValidateRequestForCreateItemBecauseContentTypeIsNotEmpty()
+    {
+        $request = $this->createMock(RequestInterface::class);
+        $request->expects($this->never())->method('getUri');
+        $request->expects($this->never())->method('getHeaders');
+        $request->expects($this->exactly(1))->method('getHeaderLine')->with('Content-Type')->willReturn('');
+        $request->expects($this->never())->method('getMethod');
+        $request->expects($this->never())->method('getBody');
+
+        $requestDefinition = $this->createMock(OperationDefinition::class);
+
+        $requestDefinition->expects($this->once())->method('hasHeadersSchema')->willReturn(false);
+        $requestDefinition->expects($this->never())->method('getHeadersSchema');
+        $requestDefinition->expects($this->once())->method('getContentTypes')->willReturn(['application/json']);
+
+        $requestDefinition->expects($this->once())->method('hasPathSchema')->willReturn(false);
+        $requestDefinition->expects($this->never())->method('getPathTemplate');
+        $requestDefinition->expects($this->never())->method('getPathSchema');
+
+        $requestDefinition->expects($this->once())->method('hasQueryParametersSchema')->willReturn(false);
+        $requestDefinition->expects($this->never())->method('getQueryParametersSchema');
+
+        $requestDefinition->expects($this->once())->method('hasBodySchema')->willReturn(true);
+        $requestDefinition->expects($this->never())->method('getBodySchema');
+
+        $this->decoder->expects($this->never())->method('decode');
+
+        $this->validator->expects($this->never())->method('check');
+        $this->validator->expects($this->never())->method('isValid');
+        $this->validator->expects($this->never())->method('getErrors');
+        $this->validator->expects($this->never())->method('reset');
+
+        $messageValidator = $this->getValidator();
+        $messageValidator->validateRequest($request, $requestDefinition);
+        $this->assertTrue($messageValidator->hasViolations());
+        $violations = $messageValidator->getViolations();
+        $this->assertIsArray($violations);
+        $this->assertCount(1, $violations);
+        $violation = $violations[0];
+        $this->assertInstanceOf(ConstraintViolation::class, $violation);
+        $this->assertSame('Content-Type', $violation->getProperty());
+        $this->assertSame('Content-Type should not be empty', $violation->getMessage());
+        $this->assertSame('required', $violation->getConstraint());
+        $this->assertSame('header', $violation->getLocation());
+        $this->assertSame(
+            [
+                'property' => 'Content-Type',
+                'message' => 'Content-Type should not be empty',
+                'constraint' => 'required',
+                'location' => 'header',
+            ],
+            $violation->toArray()
+        );
+    }
+
+    public function testShouldNotValidateRequestForCreateItemBecauseContentTypeIsNotValidate()
+    {
+        $request = $this->createMock(RequestInterface::class);
+        $request->expects($this->never())->method('getUri');
+        $request->expects($this->never())->method('getHeaders');
+        $request->expects($this->exactly(3))->method('getHeaderLine')->with('Content-Type')->willReturn('application/ld+json; charset=utf8');
+        $request->expects($this->never())->method('getMethod');
+        $request->expects($this->never())->method('getBody');
+
+        $requestDefinition = $this->createMock(OperationDefinition::class);
+
+        $requestDefinition->expects($this->once())->method('hasHeadersSchema')->willReturn(false);
+        $requestDefinition->expects($this->never())->method('getHeadersSchema');
+        $requestDefinition->expects($this->once())->method('getContentTypes')->willReturn(['application/json']);
+
+        $requestDefinition->expects($this->once())->method('hasPathSchema')->willReturn(false);
+        $requestDefinition->expects($this->never())->method('getPathTemplate');
+        $requestDefinition->expects($this->never())->method('getPathSchema');
+
+        $requestDefinition->expects($this->once())->method('hasQueryParametersSchema')->willReturn(false);
+        $requestDefinition->expects($this->never())->method('getQueryParametersSchema');
+
+        $requestDefinition->expects($this->once())->method('hasBodySchema')->willReturn(true);
+        $requestDefinition->expects($this->never())->method('getBodySchema');
+
+        $this->decoder->expects($this->never())->method('decode');
+
+        $this->validator->expects($this->never())->method('check');
+        $this->validator->expects($this->never())->method('isValid');
+        $this->validator->expects($this->never())->method('getErrors');
+        $this->validator->expects($this->never())->method('reset');
+
+        $messageValidator = $this->getValidator();
+        $messageValidator->validateRequest($request, $requestDefinition);
+        $this->assertTrue($messageValidator->hasViolations());
+        $violations = $messageValidator->getViolations();
+        $this->assertIsArray($violations);
+        $this->assertCount(1, $violations);
+        $violation = $violations[0];
+        $this->assertInstanceOf(ConstraintViolation::class, $violation);
+        $this->assertSame('Content-Type', $violation->getProperty());
+        $this->assertSame('application/ld+json; charset=utf8 is not a supported content type, supported: application/json', $violation->getMessage());
+        $this->assertSame('enum', $violation->getConstraint());
+        $this->assertSame('header', $violation->getLocation());
+        $this->assertSame(
+            [
+                'property' => 'Content-Type',
+                'message' => 'application/ld+json; charset=utf8 is not a supported content type, supported: application/json',
+                'constraint' => 'enum',
+                'location' => 'header',
+            ],
+            $violation->toArray()
+        );
+    }
+
+    #[DataProvider('getWriteMethod')]
+    public function testShouldValidateRequestForCreateItem(string $method)
+    {
+        $bodySchema = [
+            'type' => 'object',
+            'required' => ['name'],
+            'properties' => [
+                'name' => ['type' => 'string'],
+            ],
+        ];
+
         $stream = $this->createMock(StreamInterface::class);
-        $stream->expects($this->once())->method('__toString')->willReturn('');
+        $stream->expects($this->once())->method('__toString')->willReturn('{"name":"foo"}');
 
-        $this->request->expects($this->once())->method('getHeaderLine')->willReturn('application/json');
-        $this->request->expects($this->once())->method('getMethod')->willReturn($method);
-        $this->request->expects($this->once())->method('getBody')->willReturn($stream);
+        $request = $this->createMock(RequestInterface::class);
+        $request->expects($this->never())->method('getUri');
+        $request->expects($this->never())->method('getHeaders');
+        $request->expects($this->exactly(3))->method('getHeaderLine')->with('Content-Type')->willReturn('application/json; charset=utf8');
+        $request->expects($this->once())->method('getMethod')->willReturn($method);
+        $request->expects($this->once())->method('getBody')->willReturn($stream);
 
-        $this->requestDefinition->expects($this->once())->method('hasBodySchema')->willReturn(true);
-        $this->requestDefinition->expects($this->never())->method('getBodySchema');
-        $this->requestDefinition->expects($this->once())->method('getContentTypes')->willReturn(['application/json']);
-        $this->requestDefinition->expects($this->once())->method('hasHeadersSchema')->willReturn(false);
-        $this->requestDefinition->expects($this->once())->method('hasPathSchema')->willReturn(false);
-        $this->requestDefinition->expects($this->once())->method('hasQueryParametersSchema')->willReturn(false);
+        $requestDefinition = $this->createMock(OperationDefinition::class);
 
-        $this->decoder->expects($this->never())->method('decode');
-        $this->validator->expects($this->never())->method('isValid');
+        $requestDefinition->expects($this->once())->method('hasHeadersSchema')->willReturn(false);
+        $requestDefinition->expects($this->never())->method('getHeadersSchema');
+        $requestDefinition->expects($this->once())->method('getContentTypes')->willReturn(['application/json']);
 
-        $messageValidator = new MessageValidator($this->validator, $this->decoder);
-        $messageValidator->validateRequest($this->request, $this->requestDefinition);
+        $requestDefinition->expects($this->once())->method('hasPathSchema')->willReturn(false);
+        $requestDefinition->expects($this->never())->method('getPathTemplate');
+        $requestDefinition->expects($this->never())->method('getPathSchema');
+
+        $requestDefinition->expects($this->once())->method('hasQueryParametersSchema')->willReturn(false);
+        $requestDefinition->expects($this->never())->method('getQueryParametersSchema');
+
+        $requestDefinition->expects($this->exactly(2))->method('hasBodySchema')->willReturn(true);
+        $requestDefinition->expects($this->once())->method('getBodySchema')->willReturn($bodySchema);
+
+        $this->decoder->expects($this->once())->method('decode')->with('{"name":"foo"}', 'json')->willReturn(['name' => 'foo']);
+
+        $this->validator->expects($this->once())->method('check')->willReturnCallback(function ($value, $schema) {
+            $this->assertIsArray($value);
+            $this->assertInstanceOf(\stdClass::class, $schema);
+
+            $schema = json_decode(json_encode($schema), true);
+
+            $this->assertSame(['name' => 'foo'], $value);
+            $this->assertSame(
+                [
+                    'type' => 'object',
+                    'required' => ['name'],
+                    'properties' => [
+                        'name' => ['type' => 'string'],
+                    ],
+                ],
+                $schema
+            );
+        });
+        $this->validator->expects($this->once())->method('isValid')->willReturn(true);
+        $this->validator->expects($this->never())->method('getErrors');
+        $this->validator->expects($this->once())->method('reset');
+
+        $messageValidator = $this->getValidator();
+        $messageValidator->validateRequest($request, $requestDefinition);
+        $this->assertFalse($messageValidator->hasViolations());
+        $this->assertSame([], $messageValidator->getViolations());
     }
 
-    public function dataProviderTestShouldValidateRequestWithMethods(): array
+    #[DataProvider('getWriteMethod')]
+    public function testShouldValidateRequestForCreateItemWithServerRequestInterface(string $method)
+    {
+        $bodySchema = [
+            'type' => 'object',
+            'required' => ['name'],
+            'properties' => [
+                'name' => ['type' => 'string'],
+            ],
+        ];
+
+        $request = $this->createMock(ServerRequestInterface::class);
+        $request->expects($this->never())->method('getUri');
+        $request->expects($this->never())->method('getHeaders');
+        $request->expects($this->exactly(3))->method('getHeaderLine')->with('Content-Type')->willReturn('application/json; charset=utf8');
+        $request->expects($this->once())->method('getMethod')->willReturn($method);
+        $request->expects($this->once())->method('getParsedBody')->willReturn(['name' => 'foo']);
+
+        $requestDefinition = $this->createMock(OperationDefinition::class);
+
+        $requestDefinition->expects($this->once())->method('hasHeadersSchema')->willReturn(false);
+        $requestDefinition->expects($this->never())->method('getHeadersSchema');
+        $requestDefinition->expects($this->once())->method('getContentTypes')->willReturn(['application/json']);
+
+        $requestDefinition->expects($this->once())->method('hasPathSchema')->willReturn(false);
+        $requestDefinition->expects($this->never())->method('getPathTemplate');
+        $requestDefinition->expects($this->never())->method('getPathSchema');
+
+        $requestDefinition->expects($this->once())->method('hasQueryParametersSchema')->willReturn(false);
+        $requestDefinition->expects($this->never())->method('getQueryParametersSchema');
+
+        $requestDefinition->expects($this->exactly(2))->method('hasBodySchema')->willReturn(true);
+        $requestDefinition->expects($this->once())->method('getBodySchema')->willReturn($bodySchema);
+
+        $this->decoder->expects($this->once())->method('decode')->with('{"name":"foo"}', 'json')->willReturn(['name' => 'foo']);
+
+        $this->validator->expects($this->once())->method('check')->willReturnCallback(function ($value, $schema) {
+            $this->assertIsArray($value);
+            $this->assertInstanceOf(\stdClass::class, $schema);
+
+            $schema = json_decode(json_encode($schema), true);
+
+            $this->assertSame(['name' => 'foo'], $value);
+            $this->assertSame(
+                [
+                    'type' => 'object',
+                    'required' => ['name'],
+                    'properties' => [
+                        'name' => ['type' => 'string'],
+                    ],
+                ],
+                $schema
+            );
+        });
+        $this->validator->expects($this->once())->method('isValid')->willReturn(true);
+        $this->validator->expects($this->never())->method('getErrors');
+        $this->validator->expects($this->once())->method('reset');
+
+        $messageValidator = $this->getValidator();
+        $messageValidator->validateRequest($request, $requestDefinition);
+        $this->assertFalse($messageValidator->hasViolations());
+        $this->assertSame([], $messageValidator->getViolations());
+    }
+
+    #[DataProvider('getWriteMethod')]
+    public function testShouldValidateRequestForCreateItemWithServerRequestInterfaceAndEmptyBody(string $method)
+    {
+        $bodySchema = [
+            'type' => 'object',
+            'required' => ['name'],
+            'properties' => [
+                'name' => ['type' => 'string'],
+            ],
+        ];
+
+        $request = $this->createMock(ServerRequestInterface::class);
+        $request->expects($this->never())->method('getUri');
+        $request->expects($this->never())->method('getHeaders');
+        $request->expects($this->exactly(3))->method('getHeaderLine')->with('Content-Type')->willReturn('application/json; charset=utf8');
+        $request->expects($this->once())->method('getMethod')->willReturn($method);
+        $request->expects($this->once())->method('getParsedBody')->willReturn([]);
+
+        $requestDefinition = $this->createMock(OperationDefinition::class);
+
+        $requestDefinition->expects($this->once())->method('hasHeadersSchema')->willReturn(false);
+        $requestDefinition->expects($this->never())->method('getHeadersSchema');
+        $requestDefinition->expects($this->once())->method('getContentTypes')->willReturn(['application/json']);
+
+        $requestDefinition->expects($this->once())->method('hasPathSchema')->willReturn(false);
+        $requestDefinition->expects($this->never())->method('getPathTemplate');
+        $requestDefinition->expects($this->never())->method('getPathSchema');
+
+        $requestDefinition->expects($this->once())->method('hasQueryParametersSchema')->willReturn(false);
+        $requestDefinition->expects($this->never())->method('getQueryParametersSchema');
+
+        $requestDefinition->expects($this->exactly(2))->method('hasBodySchema')->willReturn(true);
+        $requestDefinition->expects($this->once())->method('getBodySchema')->willReturn($bodySchema);
+
+        $this->decoder->expects($this->once())->method('decode')->with('', 'json')->willReturn([]);
+
+        $this->validator->expects($this->once())->method('check')->willReturnCallback(function ($value, $schema) {
+            $this->assertIsArray($value);
+            $this->assertInstanceOf(\stdClass::class, $schema);
+
+            $schema = json_decode(json_encode($schema), true);
+
+            $this->assertSame([], $value);
+            $this->assertSame(
+                [
+                    'type' => 'object',
+                    'required' => ['name'],
+                    'properties' => [
+                        'name' => ['type' => 'string'],
+                    ],
+                ],
+                $schema
+            );
+        });
+        $this->validator->expects($this->once())->method('isValid')->willReturn(true);
+        $this->validator->expects($this->never())->method('getErrors');
+        $this->validator->expects($this->once())->method('reset');
+
+        $messageValidator = $this->getValidator();
+        $messageValidator->validateRequest($request, $requestDefinition);
+        $this->assertFalse($messageValidator->hasViolations());
+        $this->assertSame([], $messageValidator->getViolations());
+    }
+
+    public static function getWriteMethod(): array
     {
         return [
+            ['POST'],
             ['PUT'],
             ['PATCH'],
-            ['POST'],
         ];
     }
 
-    public function testShouldValidateResponseWithOutBodySchema()
+    public function testShouldValidateResponseWhenDeleteItem()
     {
+        $headersSchema = [
+            'type' => 'object',
+            'required' => ['content-type'],
+            'properties' => [
+                'x-uid' => ['type' => 'string'],
+                'type' => ['type' => 'string', 'default' => 'application/json', 'enum' => ['application/json']],
+                'cache-control' => ['type' => 'string'],
+            ],
+        ];
+        $headers = [
+            'content-type' => ['application/json'],
+            'x-uid' => ['b6778b4'],
+        ];
+
         $response = $this->createMock(ResponseInterface::class);
-        $response->expects($this->once())->method('getStatusCode')->willReturn(200);
-        $response->expects($this->never())->method('getHeaderLine');
+        $response->expects($this->once())->method('getStatusCode')->willReturn(204);
+        $response->expects($this->once())->method('getHeaders')->willReturn($headers);
+        $response->expects($this->once())->method('getHeaderLine')->willReturn('');
+        $response->expects($this->never())->method('getBody');
 
         $responseDefinition = $this->createMock(ResponseDefinition::class);
-        $responseDefinition->expects($this->once())->method('hasBodySchema')->willReturn(false);
+        $responseDefinition->expects($this->once())->method('hasHeadersSchema')->willReturn(true);
+        $responseDefinition->expects($this->once())->method('getHeadersSchema')->willReturn($headersSchema);
         $responseDefinition->expects($this->never())->method('getContentTypes');
-        $responseDefinition->expects($this->once())->method('hasHeadersSchema')->willReturn(false);
+        $responseDefinition->expects($this->once())->method('getStatusCode')->willReturn(204);
 
-        $this->requestDefinition->expects($this->once())->method('getResponseDefinition')->willReturn($responseDefinition);
+        $responseDefinition->expects($this->once())->method('hasBodySchema')->willReturn(false);
 
-        $messageValidator = new MessageValidator($this->validator, $this->decoder);
-        $messageValidator->validateResponse($response, $this->requestDefinition);
+        $definition = $this->createMock(OperationDefinition::class);
+        $definition->expects($this->once())->method('getResponseDefinition')->with(204)->willReturn($responseDefinition);
+
+        $this->decoder->expects($this->never())->method('decode');
+
+        $this->validator->expects($this->once())->method('check')->willReturnCallback(function ($value, $schema) {
+            $this->assertInstanceOf(\stdClass::class, $value);
+            $this->assertInstanceOf(\stdClass::class, $schema);
+
+            $value = json_decode(json_encode($value), true);
+            $schema = json_decode(json_encode($schema), true);
+
+            $this->assertSame(['content-type' => 'application/json', 'x-uid' => 'b6778b4'], $value);
+
+            $this->assertSame(
+                [
+                    'type' => 'object',
+                    'required' => ['content-type'],
+                    'properties' => [
+                        'x-uid' => ['type' => 'string'],
+                        'type' => ['type' => 'string', 'default' => 'application/json', 'enum' => ['application/json']],
+                        'cache-control' => ['type' => 'string'],
+                    ],
+                ],
+                $schema
+            );
+        });
+        $this->validator->expects($this->once())->method('isValid')->willReturn(true);
+        $this->validator->expects($this->never())->method('getErrors');
+        $this->validator->expects($this->once())->method('reset');
+
+        $messageValidator = $this->getValidator();
+        $messageValidator->validateResponse($response, $definition);
+        $this->assertFalse($messageValidator->hasViolations());
+        $this->assertSame([], $messageValidator->getViolations());
     }
 
-    public function testShouldValidateResponseWithContentTypeInvalid()
+    public function testShouldNotValidateResponseBecauseContentTypeIsEmpty()
     {
-        /** @var ResponseInterface|MockObject */
+        $headersSchema = [
+            'type' => 'object',
+            'required' => ['content-type'],
+            'properties' => [
+                'x-uid' => ['type' => 'string'],
+                'type' => ['type' => 'string', 'default' => 'application/json', 'enum' => ['application/json']],
+                'cache-control' => ['type' => 'string'],
+            ],
+        ];
+        $headers = [
+            'content-type' => ['application/json'],
+            'x-uid' => ['b6778b4'],
+        ];
+
         $response = $this->createMock(ResponseInterface::class);
         $response->expects($this->once())->method('getStatusCode')->willReturn(200);
-        $response->expects($this->exactly(2))->method('getHeaderLine')->with('Content-Type')->willReturn('application/hal+json');
+        $response->expects($this->once())->method('getHeaders')->willReturn($headers);
+        $response->expects($this->once())->method('getHeaderLine')->willReturn('');
+        $response->expects($this->never())->method('getBody');
 
         $responseDefinition = $this->createMock(ResponseDefinition::class);
-        $responseDefinition->expects($this->once())->method('hasBodySchema')->willReturn(true);
-        $responseDefinition->expects($this->never())->method('getBodySchema');
+        $responseDefinition->expects($this->once())->method('hasHeadersSchema')->willReturn(true);
+        $responseDefinition->expects($this->once())->method('getHeadersSchema')->willReturn($headersSchema);
         $responseDefinition->expects($this->once())->method('getContentTypes')->willReturn(['application/json']);
-        $responseDefinition->expects($this->once())->method('hasHeadersSchema')->willReturn(false);
+        $responseDefinition->expects($this->once())->method('getStatusCode')->willReturn(200);
 
-        $this->requestDefinition->expects($this->once())->method('getResponseDefinition')->willReturn($responseDefinition);
+        $responseDefinition->expects($this->never())->method('hasBodySchema');
 
-        $messageValidator = new MessageValidator($this->validator, $this->decoder);
-        $messageValidator->validateResponse($response, $this->requestDefinition);
+        $definition = $this->createMock(OperationDefinition::class);
+        $definition->expects($this->once())->method('getResponseDefinition')->with(200)->willReturn($responseDefinition);
+
+        $this->decoder->expects($this->never())->method('decode');
+
+        $this->validator->expects($this->once())->method('check')->willReturnCallback(function ($value, $schema) {
+            $this->assertInstanceOf(\stdClass::class, $value);
+            $this->assertInstanceOf(\stdClass::class, $schema);
+
+            $value = json_decode(json_encode($value), true);
+            $schema = json_decode(json_encode($schema), true);
+
+            $this->assertSame(['content-type' => 'application/json', 'x-uid' => 'b6778b4'], $value);
+
+            $this->assertSame(
+                [
+                    'type' => 'object',
+                    'required' => ['content-type'],
+                    'properties' => [
+                        'x-uid' => ['type' => 'string'],
+                        'type' => ['type' => 'string', 'default' => 'application/json', 'enum' => ['application/json']],
+                        'cache-control' => ['type' => 'string'],
+                    ],
+                ],
+                $schema
+            );
+        });
+        $this->validator->expects($this->once())->method('isValid')->willReturn(true);
+        $this->validator->expects($this->never())->method('getErrors');
+        $this->validator->expects($this->once())->method('reset');
+
+        $messageValidator = $this->getValidator();
+        $messageValidator->validateResponse($response, $definition);
+        $this->assertTrue($messageValidator->hasViolations());
+        $violations = $messageValidator->getViolations();
+        $this->assertIsArray($violations);
+        $this->assertCount(1, $violations);
+        $violation = $violations[0];
+        $this->assertInstanceOf(ConstraintViolation::class, $violation);
+        $this->assertSame('Content-Type', $violation->getProperty());
+        $this->assertSame('Content-Type should not be empty', $violation->getMessage());
+        $this->assertSame('required', $violation->getConstraint());
+        $this->assertSame('header', $violation->getLocation());
+        $this->assertSame(
+            [
+                'property' => 'Content-Type',
+                'message' => 'Content-Type should not be empty',
+                'constraint' => 'required',
+                'location' => 'header',
+            ],
+            $violation->toArray()
+        );
     }
 
-    public function testShouldValidateResponse()
+    public function testShouldNotValidateResponseBecauseContentTypeIsNotValidate()
     {
-        $stream = $this->createMock(StreamInterface::class);
-        $stream->expects($this->once())->method('__toString')->willReturn('');
+        $headersSchema = [
+            'type' => 'object',
+            'required' => ['content-type'],
+            'properties' => [
+                'x-uid' => ['type' => 'string'],
+                'type' => ['type' => 'string', 'default' => 'application/json', 'enum' => ['application/json']],
+                'cache-control' => ['type' => 'string'],
+            ],
+        ];
+        $headers = [
+            'content-type' => ['application/json'],
+            'x-uid' => ['b6778b4'],
+        ];
 
-        /** @var ResponseInterface|MockObject */
         $response = $this->createMock(ResponseInterface::class);
         $response->expects($this->once())->method('getStatusCode')->willReturn(200);
-        $response->expects($this->once())->method('getHeaderLine')->with('Content-Type')->willReturn('application/json');
-        $response->expects($this->once())->method('getBody')->willReturn($stream);
+        $response->expects($this->once())->method('getHeaders')->willReturn($headers);
+        $response->expects($this->exactly(3))->method('getHeaderLine')->willReturn('application/hal+json; charset=utf8');
+        $response->expects($this->never())->method('getBody');
 
         $responseDefinition = $this->createMock(ResponseDefinition::class);
-        $responseDefinition->expects($this->once())->method('hasBodySchema')->willReturn(true);
-        $responseDefinition->expects($this->never())->method('getBodySchema');
+        $responseDefinition->expects($this->once())->method('hasHeadersSchema')->willReturn(true);
+        $responseDefinition->expects($this->once())->method('getHeadersSchema')->willReturn($headersSchema);
         $responseDefinition->expects($this->once())->method('getContentTypes')->willReturn(['application/json']);
-        $responseDefinition->expects($this->once())->method('hasHeadersSchema')->willReturn(false);
+        $responseDefinition->expects($this->never())->method('getStatusCode');
 
-        $this->requestDefinition->expects($this->once())->method('getResponseDefinition')->willReturn($responseDefinition);
+        $responseDefinition->expects($this->never())->method('hasBodySchema');
 
-        $messageValidator = new MessageValidator($this->validator, $this->decoder);
-        $messageValidator->validateResponse($response, $this->requestDefinition);
-    }
+        $definition = $this->createMock(OperationDefinition::class);
+        $definition->expects($this->once())->method('getResponseDefinition')->with(200)->willReturn($responseDefinition);
 
-    /**
-     * @dataProvider dataProviderTestShouldValidateHeaderOfRequest
-     */
-    public function testShouldValidateHeaders(array $headers, ?\stdClass $headersSchema, array $errors)
-    {
-        $this->request->expects($this->exactly(null === $headersSchema ? 0 : 1))->method('getHeaders')->willReturn($headers);
+        $this->decoder->expects($this->never())->method('decode');
 
-        $this->requestDefinition->expects($this->once())->method('hasHeadersSchema')->willReturn(null !== $headersSchema);
-        $this->requestDefinition->expects($this->exactly(null === $headersSchema ? 0 : 1))->method('getHeadersSchema')->willReturn($headersSchema);
+        $this->validator->expects($this->once())->method('check')->willReturnCallback(function ($value, $schema) {
+            $this->assertInstanceOf(\stdClass::class, $value);
+            $this->assertInstanceOf(\stdClass::class, $schema);
 
-        $this->validator
-            ->expects($this->exactly(null === $headersSchema ? 0 : 1))
-            ->method('coerce')
-            ->with(json_decode(empty($headers) ? '{}' : '{"0":"application\/json"}'), $this->isInstanceOf(\stdClass::class))
-        ;
-        $this->validator->expects($this->exactly(null === $headersSchema ? 0 : 1))->method('isValid')->willReturn(empty($errors));
-        $this->validator->expects($this->exactly(empty($errors) ? 0 : 1))->method('getErrors')->willReturn($errors);
-        $this->validator->expects($this->exactly(null === $headersSchema ? 0 : 1))->method('reset');
+            $value = json_decode(json_encode($value), true);
+            $schema = json_decode(json_encode($schema), true);
 
-        $messageValidator = new MessageValidator($this->validator, $this->decoder);
-        $messageValidator->validateHeaders($this->request, $this->requestDefinition);
-        $this->assertSame(!empty($errors), $messageValidator->hasViolations());
-    }
+            $this->assertSame(['content-type' => 'application/json', 'x-uid' => 'b6778b4'], $value);
 
-    public function dataProviderTestShouldValidateHeaderOfRequest(): array
-    {
-        return [
-            [
-                [],
-                null,
-                [],
-            ],
-            [
-                [['Content-Type' => 'application/json']],
-                null,
-                [],
-            ],
-            [
-                [['Content-Type' => 'application/json'], ['X-FOO' => 'bar']],
-                null,
-                [],
-            ],
-            [
-                [['CONTENT-TYPE' => 'application/json']],
-                null,
-                [],
-            ],
-            [
-                [],
-                json_decode('{"type":"object","required":[],"properties":{"Content-Type":{"type":"string"}}}'),
-                [],
-            ],
-            [
-                [['Content-Type' => 'application/json']],
-                json_decode('{"type":"object","required":[],"properties":{"foo":{"type":"string"}}}'),
-                [],
-            ],
-            [
-                [['Content-Type' => 'application/json']],
-                json_decode('{"type":"object","required":[],"properties":{"foo":{"type":"string"}}}'),
+            $this->assertSame(
                 [
-                    [
-                        'property' => 'foo',
-                        'message' => 'Foo not found',
-                        'constraint' => 'bar',
+                    'type' => 'object',
+                    'required' => ['content-type'],
+                    'properties' => [
+                        'x-uid' => ['type' => 'string'],
+                        'type' => ['type' => 'string', 'default' => 'application/json', 'enum' => ['application/json']],
+                        'cache-control' => ['type' => 'string'],
                     ],
                 ],
+                $schema
+            );
+        });
+        $this->validator->expects($this->once())->method('isValid')->willReturn(true);
+        $this->validator->expects($this->never())->method('getErrors');
+        $this->validator->expects($this->once())->method('reset');
+
+        $messageValidator = $this->getValidator();
+        $messageValidator->validateResponse($response, $definition);
+        $this->assertTrue($messageValidator->hasViolations());
+        $violations = $messageValidator->getViolations();
+        $this->assertIsArray($violations);
+        $this->assertCount(1, $violations);
+        $violation = $violations[0];
+        $this->assertInstanceOf(ConstraintViolation::class, $violation);
+        $this->assertSame('Content-Type', $violation->getProperty());
+        $this->assertSame('application/hal+json; charset=utf8 is not a supported content type, supported: application/json', $violation->getMessage());
+        $this->assertSame('enum', $violation->getConstraint());
+        $this->assertSame('header', $violation->getLocation());
+        $this->assertSame(
+            [
+                'property' => 'Content-Type',
+                'message' => 'application/hal+json; charset=utf8 is not a supported content type, supported: application/json',
+                'constraint' => 'enum',
+                'location' => 'header',
             ],
-        ];
+            $violation->toArray()
+        );
     }
 
-    /**
-     * @dataProvider dataProviderTestShouldValidateBody
-     */
-    public function testShouldValidateBody(string $body, ?\stdClass $bodyDefinition, array $errors)
+    public function getValidator(): MessageValidator
     {
-        $stream = $this->createMock(StreamInterface::class);
-        $stream->expects($this->once())->method('__toString')->willReturn($body);
-
-        $this->request->expects($this->once())->method('getBody')->willReturn($stream);
-        $this->request->expects($this->exactly('' !== $body && null !== $bodyDefinition ? 1 : 0))->method('getHeaderLine')->willReturn('application/json');
-
-        $this->decoder->expects($this->exactly('' !== $body && null !== $bodyDefinition ? 1 : 0))->method('decode')->willReturn(json_decode($body));
-
-        $this->requestDefinition->expects($this->exactly('' !== $body ? 1 : 0))->method('hasBodySchema')->willReturn(null !== $bodyDefinition);
-        $this->requestDefinition->expects($this->exactly(null !== $bodyDefinition ? 1 : 0))->method('getBodySchema')->willReturn($bodyDefinition);
-
-        $this->validator->expects($this->exactly('' !== $body && null !== $bodyDefinition ? 1 : 0))->method('coerce');
-        $this->validator->expects($this->exactly('' !== $body && null !== $bodyDefinition ? 1 : 0))->method('isValid')->willReturn(empty($errors));
-        $this->validator->expects($this->exactly(!empty($errors) ? 1 : 0))->method('getErrors')->willReturn($errors);
-        $this->validator->expects($this->exactly('' !== $body && null !== $bodyDefinition ? 1 : 0))->method('reset');
-
-        $messageValidator = new MessageValidator($this->validator, $this->decoder);
-        $messageValidator->validateMessageBody($this->request, $this->requestDefinition);
-        $this->assertSame(!empty($errors), $messageValidator->hasViolations());
-    }
-
-    /**
-     * @dataProvider dataProviderTestShouldValidateBody
-     */
-    public function testShouldValidateBodyWithServerRequest(string $body, ?\stdClass $bodyDefinition, array $errors)
-    {
-        $request = $this->createMock(ServerRequestInterface::class);
-        $request->expects($this->once())->method('getParsedBody')->willReturn(empty($body) ? [] : json_decode($body));
-        $request->expects($this->exactly('' !== $body && null !== $bodyDefinition ? 1 : 0))->method('getHeaderLine')->willReturn('application/json');
-
-        $this->decoder->expects($this->exactly('' !== $body && null !== $bodyDefinition ? 1 : 0))->method('decode')->willReturn(json_decode($body));
-
-        $this->requestDefinition->expects($this->exactly(!empty($body) ? 1 : 0))->method('hasBodySchema')->willReturn(null !== $bodyDefinition);
-        $this->requestDefinition->expects($this->exactly(null !== $bodyDefinition ? 1 : 0))->method('getBodySchema')->willReturn($bodyDefinition);
-
-        $this->validator->expects($this->exactly('' !== $body && null !== $bodyDefinition ? 1 : 0))->method('coerce');
-        $this->validator->expects($this->exactly('' !== $body && null !== $bodyDefinition ? 1 : 0))->method('isValid')->willReturn(empty($errors));
-        $this->validator->expects($this->exactly(!empty($errors) ? 1 : 0))->method('getErrors')->willReturn($errors);
-        $this->validator->expects($this->exactly('' !== $body && null !== $bodyDefinition ? 1 : 0))->method('reset');
-
-        $messageValidator = new MessageValidator($this->validator, $this->decoder);
-        $messageValidator->validateMessageBody($request, $this->requestDefinition);
-        $this->assertSame(!empty($errors), $messageValidator->hasViolations());
-    }
-
-    public function dataProviderTestShouldValidateBody(): array
-    {
-        return [
-            [
-                '',
-                null,
-                [],
-            ],
-            [
-                '{"token":"__TOKEN__"}',
-                json_decode('{"type":"object","items":{"type":"object","properties":{"token":{"type":"string"}}}}'),
-                [
-                    [
-                        'property' => 'foo',
-                        'message' => 'Foo not found',
-                        'constraint' => 'bar',
-                    ],
-                ],
-            ],
-        ];
-    }
-
-    /**
-     * @dataProvider dataProviderTestShouldValidateContentType
-     */
-    public function testShouldValidateContentType(bool $isValid, string $contentType, array $contentTypeDefinition, ?array $error)
-    {
-        $this->request
-            ->expects($isValid || '' === $contentType ? $this->once() : $this->exactly(2))
-            ->method('getHeaderLine')
-            ->willReturn($contentType)
-        ;
-        $this->requestDefinition->expects($this->once())->method('getContentTypes')->willReturn($contentTypeDefinition);
-
-        $messageValidator = new MessageValidator($this->validator, $this->decoder);
-        $this->assertSame($isValid, $messageValidator->validateContentType($this->request, $this->requestDefinition));
-        if (!$isValid) {
-            $this->assertNotEmpty($messageValidator->getViolations());
-            $this->assertCount(1, $messageValidator->getViolations());
-            foreach ($messageValidator->getViolations() as $violation) {
-                $this->assertInstanceOf(ConstraintViolation::class, $violation);
-                $this->assertSame('Content-Type', $violation->getProperty());
-                $this->assertSame($error['message'], $violation->getMessage());
-                $this->assertSame($error['constraint'], $violation->getConstraint());
-                $this->assertSame('header', $violation->getLocation());
-            }
-        }
-    }
-
-    public function dataProviderTestShouldValidateContentType(): array
-    {
-        return [
-            [
-                true,
-                'application/json',
-                ['application/json'],
-                null,
-            ],
-            [
-                false,
-                'application/hal+json',
-                ['application/json'],
-                [
-                    'message' => 'application/hal+json is not a supported content type, supported: application/json',
-                    'constraint' => 'enum',
-                ],
-            ],
-            [
-                false,
-                '',
-                ['application/json'],
-                ['message' => 'Content-Type should not be empty', 'constraint' => 'required'],
-            ],
-        ];
-    }
-
-    /**
-     * @dataProvider dataProviderTestShouldValidatePath
-     *
-     * @param \stdClass $pathSchema
-     */
-    public function testShouldValidatePath(?\stdClass $pathSchema, string $path, array $errors)
-    {
-        $uri = $this->createMock(UriInterface::class);
-        $uri
-            ->expects(null !== $pathSchema ? $this->once() : $this->never())
-            ->method('getPath')
-            ->willReturn($path)
-        ;
-
-        $this->request
-            ->expects(null !== $pathSchema ? $this->once() : $this->never())
-            ->method('getUri')
-            ->willReturn($uri)
-        ;
-
-        $this->requestDefinition->expects($this->once())->method('hasPathSchema')->willReturn(null !== $pathSchema);
-        $this->requestDefinition
-            ->expects(null !== $pathSchema ? $this->once() : $this->never())
-            ->method('getPathTemplate')
-            ->willReturn($path)
-        ;
-        $this->requestDefinition
-            ->expects(null !== $pathSchema ? $this->once() : $this->never())
-            ->method('getPathSchema')
-            ->willReturn($pathSchema)
-        ;
-
-        $this->validator
-            ->expects(null !== $pathSchema ? $this->once() : $this->never())
-            ->method('coerce')
-            ->with($this->isInstanceOf(\stdClass::class), $this->isInstanceOf(\stdClass::class))
-        ;
-        $this->validator
-            ->expects(null !== $pathSchema ? $this->once() : $this->never())
-            ->method('isValid')
-            ->willReturn(empty($errors))
-        ;
-        $this->validator->expects($this->exactly(!empty($errors) ? 1 : 0))->method('getErrors')->willReturn($errors);
-        $this->validator->expects(null !== $pathSchema ? $this->once() : $this->never())->method('reset');
-
-        $messageValidator = new MessageValidator($this->validator, $this->decoder);
-        $messageValidator->validatePath($this->request, $this->requestDefinition);
-        $this->assertSame(!empty($errors), $messageValidator->hasViolations());
-    }
-
-    public function dataProviderTestShouldValidatePath(): array
-    {
-        return [
-            [
-                null,
-                '',
-                [],
-            ],
-            [
-                json_decode('{"type":"object","required":["id"],"properties":{"id":{"type":"string"}}}'),
-                '/celebrities/{id}',
-                [],
-            ],
-            [
-                json_decode('{"type":"object","required":["id"],"properties":{"id":{"type":"string"}}}'),
-                '/celebrities/{id}',
-                [
-                    [
-                        'property' => 'id',
-                        'message' => 'id not found',
-                        'constraint' => 'required',
-                    ],
-                ],
-            ],
-        ];
-    }
-
-    /**
-     * @dataProvider dataProviderTestShouldValidateQueryParameters
-     */
-    public function testShouldValidateQueryParameters(?\stdClass $queryParametersSchema, string $query, array $errors, \stdClass $queryParameters)
-    {
-        $uri = $this->createMock(UriInterface::class);
-        $uri
-            ->expects(null !== $queryParametersSchema ? $this->once() : $this->never())
-            ->method('getQuery')
-            ->willReturn($query)
-        ;
-
-        $this->request
-            ->expects(null !== $queryParametersSchema ? $this->once() : $this->never())
-            ->method('getUri')
-            ->willReturn($uri)
-        ;
-        $this->requestDefinition->expects($this->once())->method('hasQueryParametersSchema')->willReturn(null !== $queryParametersSchema);
-        $this->requestDefinition
-            ->expects(null !== $queryParametersSchema ? $this->once() : $this->never())
-            ->method('getQueryParametersSchema')
-            ->willReturn($queryParametersSchema)
-        ;
-
-        $this->validator
-            ->expects(null !== $queryParametersSchema ? $this->once() : $this->never())
-            ->method('coerce')
-            ->with($queryParameters, $this->isInstanceOf(\stdClass::class))
-        ;
-        $this->validator
-            ->expects(null !== $queryParametersSchema ? $this->once() : $this->never())
-            ->method('isValid')
-            ->willReturn(empty($errors))
-        ;
-        $this->validator->expects($this->exactly(!empty($errors) ? 1 : 0))->method('getErrors')->willReturn($errors);
-        $this->validator->expects(null !== $queryParametersSchema ? $this->once() : $this->never())->method('reset');
-
-        $messageValidator = new MessageValidator($this->validator, $this->decoder);
-        $messageValidator->validateQueryParameters($this->request, $this->requestDefinition);
-        $this->assertSame(!empty($errors), $messageValidator->hasViolations());
-    }
-
-    public function dataProviderTestShouldValidateQueryParameters(): array
-    {
-        return [
-            [
-                null,
-                '',
-                [],
-                json_decode('{}'),
-            ],
-            [
-                json_decode('{"type":"object","required":[],"properties":{"order[nickName]":{"type":"string"},"order[score]":{"type":"string"},"order[dateCreated]":{"type":"string"},"order[dateModified]":{"type":"string"},"page":{"type":"integer","description":"The collection page number"}}}'),
-                '',
-                [],
-                json_decode('{}'),
-            ],
-            [
-                json_decode('{"type":"object","required":[],"properties":{"order[nickName]":{"type":"string"},"order[score]":{"type":"string"},"order[dateCreated]":{"type":"string"},"order[dateModified]":{"type":"string"},"page":{"type":"integer","description":"The collection page number"}}}'),
-                'page=2',
-                [],
-                json_decode('{"page":2}'),
-            ],
-            [
-                json_decode('{"type":"object","required":[],"properties":{"order[nickName]":{"type":"string"},"order[score]":{"type":"string"},"order[dateCreated]":{"type":"string"},"order[dateModified]":{"type":"string"},"page":{"type":"integer","description":"The collection page number"}}}'),
-                'page=2&order%5BnickName%5D=asc',
-                [],
-                json_decode('{"page":2,"order%5BnickName%5D":"asc"}'),
-            ],
-            [
-                json_decode('{"type":"object","required":[],"properties":{"order[nickName]":{"type":"string"},"order[score]":{"type":"string"},"order[dateCreated]":{"type":"string"},"order[dateModified]":{"type":"string"},"page":{"type":"integer","description":"The collection page number"}}}'),
-                'page=bfdb&order%5BnickName%5D=asc',
-                [
-                    [
-                        'property' => 'page',
-                        'message' => 'String value found, but an integer is required',
-                        'constraint' => 'type',
-                    ],
-                ],
-                json_decode('{"page":"bfdb","order%5BnickName%5D":"asc"}'),
-            ],
-        ];
+        return new MessageValidator($this->validator, $this->decoder);
     }
 }

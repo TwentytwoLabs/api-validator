@@ -2,23 +2,16 @@
 
 declare(strict_types=1);
 
-namespace TwentytwoLabs\Api\Tests\Factory;
+namespace TwentytwoLabs\ApiValidator\Tests\Factory;
 
 use PHPUnit\Framework\TestCase;
 use Psr\Cache\CacheItemInterface;
 use Psr\Cache\CacheItemPoolInterface;
-use TwentytwoLabs\Api\Factory\CachedSchemaFactoryDecorator;
-use TwentytwoLabs\Api\Factory\SchemaFactoryInterface;
-use TwentytwoLabs\Api\Schema;
+use TwentytwoLabs\ApiValidator\Factory\CachedSchemaFactoryDecorator;
+use TwentytwoLabs\ApiValidator\Factory\SchemaFactoryInterface;
+use TwentytwoLabs\ApiValidator\Schema;
 
-/**
- * Class CachedSchemaFactoryDecoratorTest.
- *
- * @codingStandardsIgnoreFile
- *
- * @SuppressWarnings(PHPMD)
- */
-class CachedSchemaFactoryDecoratorTest extends TestCase
+final class CachedSchemaFactoryDecoratorTest extends TestCase
 {
     private SchemaFactoryInterface $schemaFactory;
     private CacheItemPoolInterface $cache;

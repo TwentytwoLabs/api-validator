@@ -2,17 +2,15 @@
 
 declare(strict_types=1);
 
-namespace TwentytwoLabs\Api\Factory;
+namespace TwentytwoLabs\ApiValidator\Factory;
 
 use JsonSchema\SchemaStorage;
 use JsonSchema\Uri\UriResolver;
 use JsonSchema\Uri\UriRetriever;
-use Symfony\Component\Yaml\Yaml;
-use TwentytwoLabs\Api\Definition\Parameter;
-use TwentytwoLabs\Api\Definition\RequestDefinitions;
-use TwentytwoLabs\Api\Definition\ResponseDefinition;
-use TwentytwoLabs\Api\JsonSchema\Uri\YamlUriRetriever;
-use TwentytwoLabs\Api\Schema;
+use TwentytwoLabs\ApiValidator\Definition\OperationDefinitions;
+use TwentytwoLabs\ApiValidator\Definition\Parameter;
+use TwentytwoLabs\ApiValidator\JsonSchema\Uri\YamlUriRetriever;
+use TwentytwoLabs\ApiValidator\Schema;
 
 abstract class AbstractSchemaFactory implements SchemaFactoryInterface
 {
@@ -21,73 +19,55 @@ abstract class AbstractSchemaFactory implements SchemaFactoryInterface
      */
     public function createSchema(string $schemaFile): Schema
     {
-        $schema = $this->resolveSchemaFile($schemaFile);
-
-        return new Schema(
-            $this->createRequestDefinitions($schema),
-            $schema->basePath ?? '',
-            $schema->host ?? '',
-            $schema->schemes ?? ['http']
-        );
+        return new Schema($this->createOperationDefinitions($this->resolveSchemaFile($schemaFile)));
     }
 
-    protected function resolveSchemaFile(string $schemaFile): \stdClass
+    private function resolveSchemaFile(string $schemaFile): array
     {
         $extension = pathinfo($schemaFile, PATHINFO_EXTENSION);
-        switch ($extension) {
-            case 'yml':
-            case 'yaml':
-                if (!class_exists(Yaml::class)) {
-                    // @codeCoverageIgnoreStart
-                    throw new \InvalidArgumentException(
-                        'You need to require the "symfony/yaml" component in order to parse yml files'
-                    );
-                    // @codeCoverageIgnoreEnd
-                }
 
-                $uriRetriever = new YamlUriRetriever();
-                break;
-            case 'json':
-                $uriRetriever = new UriRetriever();
-                break;
-            default:
-                throw new \InvalidArgumentException(
-                    sprintf(
-                        'file "%s" does not provide a supported extension choose either json, yml or yaml',
-                        $schemaFile
-                    )
-                );
-        }
+        $uriRetriever = match ($extension) {
+            'yml', 'yaml' => new YamlUriRetriever(),
+            'json' => new UriRetriever(),
+            default => throw new \InvalidArgumentException(sprintf('file "%s" does not provide a supported extension choose either json, yml or yaml', $schemaFile)),
+        };
 
         $schemaStorage = new SchemaStorage($uriRetriever, new UriResolver());
 
-        $schema = $schemaStorage->getSchema($schemaFile);
+        $schema = json_decode(json_encode($schemaStorage->getSchema($schemaFile)), true);
 
-        // JsonSchema normally defers resolution of $ref values until validation.
-        // That does not work for us, because we need to have the complete schema
-        // to build definitions.
         $this->expandSchemaReferences($schema, $schemaStorage);
 
         return $schema;
     }
 
-    protected function expandSchemaReferences(mixed &$schema, SchemaStorage $schemaStorage): void
+    private function expandSchemaReferences(mixed &$schema, SchemaStorage $schemaStorage): void
     {
         foreach ($schema as &$member) {
-            if (is_object($member) && property_exists($member, '$ref') && is_string($member->{'$ref'})) {
-                $member = $schemaStorage->resolveRef($member->{'$ref'});
+            if (is_array($member) && array_key_exists('$ref', $member) && is_string($member['$ref'])) {
+                $member = json_decode(json_encode($schemaStorage->resolveRef($member['$ref'])), true);
             }
-            if (is_object($member) || is_array($member)) {
+            if (is_array($member)) {
                 $this->expandSchemaReferences($member, $schemaStorage);
             }
         }
     }
 
-    abstract protected function createRequestDefinitions(\stdClass $schema): RequestDefinitions;
+    protected function createParameter(array $parameter): Parameter
+    {
+        $name = $parameter['name'];
+        $schema = $parameter['schema'] ?? [];
+        $required = $parameter['required'] ?? false;
+        $location = $parameter['in'];
 
-    abstract protected function createResponseDefinition(
-        int|string $statusCode,
-        array $allowedContentTypes,
-        \stdClass $response
-    ): ResponseDefinition;
+        unset($parameter['in'], $parameter['required'], $parameter['name'], $parameter['schema']);
+
+        foreach ($parameter as $key => $value) {
+            $schema[$key] = $value;
+        }
+
+        return new Parameter($location, $name, $required, $schema);
+    }
+
+    abstract protected function createOperationDefinitions(array $schema): OperationDefinitions;
 }

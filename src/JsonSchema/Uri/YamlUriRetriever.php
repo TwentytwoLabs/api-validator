@@ -2,15 +2,12 @@
 
 declare(strict_types=1);
 
-namespace TwentytwoLabs\Api\JsonSchema\Uri;
+namespace TwentytwoLabs\ApiValidator\JsonSchema\Uri;
 
 use JsonSchema\Uri\UriRetriever;
 use Symfony\Component\Yaml\Yaml;
 
-/**
- * Class YamlUriRetriever.
- */
-class YamlUriRetriever extends UriRetriever
+final class YamlUriRetriever extends UriRetriever
 {
     /**
      * @see loadSchema

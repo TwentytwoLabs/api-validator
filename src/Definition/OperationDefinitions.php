@@ -2,15 +2,12 @@
 
 declare(strict_types=1);
 
-namespace TwentytwoLabs\Api\Definition;
+namespace TwentytwoLabs\ApiValidator\Definition;
 
-/**
- * Class RequestDefinitions.
- */
-class RequestDefinitions implements \Serializable, \IteratorAggregate
+class OperationDefinitions implements \IteratorAggregate
 {
     /**
-     * @var RequestDefinition[]
+     * @var OperationDefinition[]
      */
     private array $definitions = [];
 
@@ -24,7 +21,7 @@ class RequestDefinitions implements \Serializable, \IteratorAggregate
     /**
      * @throws \InvalidArgumentException
      */
-    public function getRequestDefinition(string $operationId): RequestDefinition
+    public function getOperationDefinition(string $operationId): OperationDefinition
     {
         if (isset($this->definitions[$operationId])) {
             return $this->definitions[$operationId];
@@ -42,28 +39,7 @@ class RequestDefinitions implements \Serializable, \IteratorAggregate
         }
     }
 
-    // Serializable
-    public function __serialize(): array
-    {
-        return ['definitions' => $this->definitions];
-    }
-
-    public function __unserialize(array $data): void
-    {
-        $this->definitions = $data['definitions'];
-    }
-
-    public function serialize(): string
-    {
-        return serialize($this->__serialize());
-    }
-
-    public function unserialize($serialized)
-    {
-        $this->__unserialize(unserialize($serialized));
-    }
-
-    private function addRequestDefinition(RequestDefinition $requestDefinition): void
+    private function addRequestDefinition(OperationDefinition $requestDefinition): void
     {
         $this->definitions[$requestDefinition->getOperationId()] = $requestDefinition;
     }

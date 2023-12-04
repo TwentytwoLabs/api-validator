@@ -2,15 +2,20 @@
 
 declare(strict_types=1);
 
-namespace TwentytwoLabs\Api\Definition;
+namespace TwentytwoLabs\ApiValidator\Definition;
 
 interface MessageDefinition
 {
     /**
-     * Get a list of supported content types.
-     *
-     * @return string[]
+     * Check if a schema for headers is available.
      */
+    public function hasHeadersSchema(): bool;
+
+    /**
+     * Get the schema for the headers.
+     */
+    public function getHeadersSchema(): array;
+
     public function getContentTypes(): array;
 
     /**
@@ -21,15 +26,5 @@ interface MessageDefinition
     /**
      * Get the schema for the body.
      */
-    public function getBodySchema(): ?\stdClass;
-
-    /**
-     * Check if a schema for headers is available.
-     */
-    public function hasHeadersSchema(): bool;
-
-    /**
-     * Get the schema for the headers.
-     */
-    public function getHeadersSchema(): ?\stdClass;
+    public function getBodySchema(): array;
 }

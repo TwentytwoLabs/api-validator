@@ -1,0 +1,488 @@
+{
+   "openapi": "3.0.0",
+   "info": {
+      "title": "Test",
+      "description": "",
+      "version": "2.0.0"
+   },
+   "servers": [
+      {
+         "url": "/",
+         "description": ""
+      }
+   ],
+   "paths": {
+      "/images/{uuid}": {
+         "put": {
+            "tags": [
+               "Image"
+            ],
+            "responses": {
+               "200": {
+                  "description": "Image resource updated",
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/Image-image_details"
+                        }
+                     },
+                     "application/hal+json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/Image.jsonhal-image_details"
+                        }
+                     }
+                  },
+                  "links": {},
+                  "headers": {
+                     "x-version": {
+                        "description": "",
+                        "required": false,
+                        "deprecated": false,
+                        "allowEmptyValue": false,
+                        "schema": {
+                           "type": "string"
+                        },
+                        "style": "simple",
+                        "explode": false,
+                        "allowReserved": false
+                     }
+                  }
+               },
+               "400": {
+                  "headers": {
+                     "x-version": {
+                        "description": "",
+                        "required": false,
+                        "deprecated": false,
+                        "allowEmptyValue": false,
+                        "schema": {
+                           "type": "string"
+                        },
+                        "style": "simple",
+                        "explode": false,
+                        "allowReserved": false
+                     }
+                  },
+                  "description": "Invalid input",
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "type": "object",
+                           "properties": {
+                              "type": {
+                                 "type": "string"
+                              },
+                              "title": {
+                                 "type": "string"
+                              },
+                              "detail": {
+                                 "type": "string"
+                              }
+                           }
+                        }
+                     },
+                     "application/problem+json": {
+                        "schema": {
+                           "type": "object",
+                           "properties": {
+                              "type": {
+                                 "type": "string"
+                              },
+                              "title": {
+                                 "type": "string"
+                              },
+                              "detail": {
+                                 "type": "string"
+                              }
+                           }
+                        }
+                     }
+                  }
+               },
+               "404": {
+                  "headers": {
+                     "x-version": {
+                        "description": "",
+                        "required": false,
+                        "deprecated": false,
+                        "allowEmptyValue": false,
+                        "schema": {
+                           "type": "string"
+                        },
+                        "style": "simple",
+                        "explode": false,
+                        "allowReserved": false
+                     }
+                  },
+                  "description": "Resource not found",
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "type": "object",
+                           "properties": {
+                              "type": {
+                                 "type": "string"
+                              },
+                              "title": {
+                                 "type": "string"
+                              },
+                              "detail": {
+                                 "type": "string"
+                              }
+                           }
+                        }
+                     },
+                     "application/problem+json": {
+                        "schema": {
+                           "type": "object",
+                           "properties": {
+                              "type": {
+                                 "type": "string"
+                              },
+                              "title": {
+                                 "type": "string"
+                              },
+                              "detail": {
+                                 "type": "string"
+                              }
+                           }
+                        }
+                     }
+                  }
+               },
+               "422": {
+                  "headers": {
+                     "x-version": {
+                        "description": "",
+                        "required": false,
+                        "deprecated": false,
+                        "allowEmptyValue": false,
+                        "schema": {
+                           "type": "string"
+                        },
+                        "style": "simple",
+                        "explode": false,
+                        "allowReserved": false
+                     }
+                  },
+                  "description": "Unprocessable entity",
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "type": "object",
+                           "properties": {
+                              "type": {
+                                 "type": "string"
+                              },
+                              "title": {
+                                 "type": "string"
+                              },
+                              "detail": {
+                                 "type": "string"
+                              }
+                           }
+                        }
+                     },
+                     "application/problem+json": {
+                        "schema": {
+                           "type": "object",
+                           "properties": {
+                              "type": {
+                                 "type": "string"
+                              },
+                              "title": {
+                                 "type": "string"
+                              },
+                              "detail": {
+                                 "type": "string"
+                              }
+                           }
+                        }
+                     }
+                  }
+               },
+               "default": {
+                  "headers": {
+                     "x-version": {
+                        "description": "",
+                        "required": false,
+                        "deprecated": false,
+                        "allowEmptyValue": false,
+                        "schema": {
+                           "type": "string"
+                        },
+                        "style": "simple",
+                        "explode": false,
+                        "allowReserved": false
+                     }
+                  },
+                  "description": "",
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "type": "object",
+                           "properties": {
+                              "type": {
+                                 "type": "string"
+                              },
+                              "title": {
+                                 "type": "string"
+                              },
+                              "detail": {
+                                 "type": "string"
+                              }
+                           }
+                        }
+                     },
+                     "application/problem+json": {
+                        "schema": {
+                           "type": "object",
+                           "properties": {
+                              "type": {
+                                 "type": "string"
+                              },
+                              "title": {
+                                 "type": "string"
+                              },
+                              "detail": {
+                                 "type": "string"
+                              }
+                           }
+                        }
+                     }
+                  }
+               }
+            },
+            "summary": "Replaces the Image resource.",
+            "description": "Replaces the Image resource.",
+            "parameters": [
+               {
+                  "name": "uuid",
+                  "in": "path",
+                  "description": "Image identifier",
+                  "required": true,
+                  "deprecated": false,
+                  "allowEmptyValue": false,
+                  "schema": {
+                     "type": "string"
+                  },
+                  "style": "simple",
+                  "explode": false,
+                  "allowReserved": false
+               },
+               {
+                  "name": "x-uid",
+                  "in": "header",
+                  "description": "",
+                  "required": false,
+                  "deprecated": false,
+                  "allowEmptyValue": false,
+                  "schema": {
+                     "type": "string"
+                  },
+                  "style": "simple",
+                  "explode": false,
+                  "allowReserved": false
+               }
+            ],
+            "requestBody": {
+               "description": "The updated Image resource",
+               "content": {
+                  "application/json": {
+                     "schema": {
+                        "$ref": "#/components/schemas/Image.ImagePayload"
+                     }
+                  },
+                  "application/hal+json": {
+                     "schema": {
+                        "$ref": "#/components/schemas/Image.ImagePayload.jsonhal"
+                     }
+                  }
+               },
+               "required": true
+            },
+            "deprecated": false
+         },
+         "parameters": []
+      }
+   },
+   "components": {
+      "schemas": {
+         "Image-image_details": {
+            "type": "object",
+            "description": "",
+            "deprecated": false,
+            "properties": {
+               "title": {
+                  "type": "string"
+               },
+               "uuid": {
+                  "type": "string"
+               },
+               "type": {
+                  "type": "string"
+               },
+               "src": {
+                  "type": "string"
+               },
+               "alternativeText": {
+                  "nullable": true,
+                  "type": "string"
+               },
+               "status": {
+                  "type": "string"
+               },
+               "dateCreated": {
+                  "readOnly": true,
+                  "type": "string",
+                  "format": "date-time"
+               },
+               "dateModified": {
+                  "readOnly": true,
+                  "type": "string",
+                  "format": "date-time"
+               }
+            }
+         },
+         "Image.jsonhal-image_details": {
+            "type": "object",
+            "description": "",
+            "deprecated": false,
+            "properties": {
+               "_links": {
+                  "type": "object",
+                  "properties": {
+                     "self": {
+                        "type": "object",
+                        "properties": {
+                           "href": {
+                              "type": "string",
+                              "format": "iri-reference"
+                           }
+                        }
+                     }
+                  }
+               },
+               "title": {
+                  "type": "string"
+               },
+               "uuid": {
+                  "type": "string"
+               },
+               "type": {
+                  "type": "string"
+               },
+               "src": {
+                  "type": "string"
+               },
+               "alternativeText": {
+                  "nullable": true,
+                  "type": "string"
+               },
+               "status": {
+                  "type": "string"
+               },
+               "dateCreated": {
+                  "readOnly": true,
+                  "type": "string",
+                  "format": "date-time"
+               },
+               "dateModified": {
+                  "readOnly": true,
+                  "type": "string",
+                  "format": "date-time"
+               }
+            }
+         },
+         "Image.ImagePayload": {
+            "type": "object",
+            "description": "",
+            "deprecated": false,
+            "required": [
+               "title",
+               "type",
+               "file"
+            ],
+            "properties": {
+               "title": {
+                  "type": "string"
+               },
+               "type": {
+                  "enum": [
+                     "avatar",
+                     "skill"
+                  ],
+                  "type": "string"
+               },
+               "alternativeText": {
+                  "type": "string"
+               },
+               "file": {
+                  "type": "string"
+               }
+            }
+         },
+         "Image.ImagePayload.jsonhal": {
+            "type": "object",
+            "description": "",
+            "deprecated": false,
+            "required": [
+               "title",
+               "type",
+               "file"
+            ],
+            "properties": {
+               "_links": {
+                  "type": "object",
+                  "properties": {
+                     "self": {
+                        "type": "object",
+                        "properties": {
+                           "href": {
+                              "type": "string",
+                              "format": "iri-reference"
+                           }
+                        }
+                     }
+                  }
+               },
+               "title": {
+                  "type": "string"
+               },
+               "type": {
+                  "enum": [
+                     "avatar",
+                     "skill"
+                  ],
+                  "type": "string"
+               },
+               "alternativeText": {
+                  "type": "string"
+               },
+               "file": {
+                  "type": "string"
+               }
+            }
+         }
+      },
+      "responses": {},
+      "parameters": {},
+      "examples": {},
+      "requestBodies": {},
+      "headers": {},
+      "securitySchemes": {
+         "apiKey": {
+            "type": "apiKey",
+            "description": "Value for the Authorization header parameter.",
+            "name": "Authorization",
+            "in": "header"
+         }
+      }
+   },
+   "security": [
+      {
+         "apiKey": []
+      }
+   ],
+   "tags": []
+}

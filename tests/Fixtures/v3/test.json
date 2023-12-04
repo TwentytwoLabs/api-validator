@@ -1,0 +1,1270 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Test",
+    "description": "",
+    "version": "2.0.0"
+  },
+  "servers": [
+    {
+      "url": "/",
+      "description": ""
+    }
+  ],
+  "paths": {
+    "/images": {
+      "get": {
+        "operationId": "getImageCollection",
+        "tags": [
+          "Image"
+        ],
+        "responses": {
+          "200": {
+            "headers": {
+              "x-version": {
+                "description": "",
+                "required": false,
+                "deprecated": false,
+                "allowEmptyValue": false,
+                "schema": {
+                  "type": "string"
+                },
+                "style": "simple",
+                "explode": false,
+                "allowReserved": false
+              }
+            },
+            "description": "Image collection",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Image-image_list"
+                  },
+                  "x-type": "array"
+                }
+              },
+              "application/hal+json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "_embedded": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Image.jsonhal-image_list"
+                      }
+                    },
+                    "totalItems": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "itemsPerPage": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "_links": {
+                      "type": "object",
+                      "properties": {
+                        "self": {
+                          "type": "object",
+                          "properties": {
+                            "href": {
+                              "type": "string",
+                              "format": "iri-reference"
+                            }
+                          }
+                        },
+                        "first": {
+                          "type": "object",
+                          "properties": {
+                            "href": {
+                              "type": "string",
+                              "format": "iri-reference"
+                            }
+                          }
+                        },
+                        "last": {
+                          "type": "object",
+                          "properties": {
+                            "href": {
+                              "type": "string",
+                              "format": "iri-reference"
+                            }
+                          }
+                        },
+                        "next": {
+                          "type": "object",
+                          "properties": {
+                            "href": {
+                              "type": "string",
+                              "format": "iri-reference"
+                            }
+                          }
+                        },
+                        "previous": {
+                          "type": "object",
+                          "properties": {
+                            "href": {
+                              "type": "string",
+                              "format": "iri-reference"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "_links",
+                    "_embedded"
+                  ],
+                  "x-type": "array"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "detail": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "application/problem+json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "detail": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Retrieves the collection of Image resources.",
+        "description": "Retrieves the collection of Image resources.",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "The collection page number",
+            "required": false,
+            "deprecated": false,
+            "allowEmptyValue": true,
+            "schema": {
+              "type": "integer",
+              "default": 1
+            },
+            "style": "form",
+            "explode": false,
+            "allowReserved": false
+          },
+          {
+            "name": "itemsPerPage",
+            "in": "query",
+            "description": "The number of items per page",
+            "required": false,
+            "deprecated": false,
+            "allowEmptyValue": true,
+            "schema": {
+              "type": "integer",
+              "default": 30,
+              "minimum": 0
+            },
+            "style": "form",
+            "explode": false,
+            "allowReserved": false
+          },
+          {
+            "name": "x-uid",
+            "in": "header",
+            "description": "",
+            "required": false,
+            "deprecated": false,
+            "allowEmptyValue": false,
+            "schema": {
+              "type": "string"
+            },
+            "style": "simple",
+            "explode": false,
+            "allowReserved": false
+          }
+        ],
+        "deprecated": false
+      },
+      "post": {
+        "operationId": "postImageCollection",
+        "tags": [
+          "Image"
+        ],
+        "responses": {
+          "201": {
+            "headers": {
+              "x-version": {
+                "description": "",
+                "required": false,
+                "deprecated": false,
+                "allowEmptyValue": false,
+                "schema": {
+                  "type": "string"
+                },
+                "style": "simple",
+                "explode": false,
+                "allowReserved": false
+              }
+            },
+            "description": "Image resource created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Image-image_details"
+                }
+              },
+              "application/hal+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Image.jsonhal-image_details"
+                }
+              }
+            },
+            "links": {}
+          },
+          "400": {
+            "headers": {
+              "x-version": {
+                "description": "",
+                "required": false,
+                "deprecated": false,
+                "allowEmptyValue": false,
+                "schema": {
+                  "type": "string"
+                },
+                "style": "simple",
+                "explode": false,
+                "allowReserved": false
+              }
+            },
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "detail": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "application/problem+json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "detail": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "headers": {
+              "x-version": {
+                "description": "",
+                "required": false,
+                "deprecated": false,
+                "allowEmptyValue": false,
+                "schema": {
+                  "type": "string"
+                },
+                "style": "simple",
+                "explode": false,
+                "allowReserved": false
+              }
+            },
+            "description": "Unprocessable entity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "detail": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "application/problem+json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "detail": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "headers": {
+              "x-version": {
+                "description": "",
+                "required": false,
+                "deprecated": false,
+                "allowEmptyValue": false,
+                "schema": {
+                  "type": "string"
+                },
+                "style": "simple",
+                "explode": false,
+                "allowReserved": false
+              }
+            },
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "detail": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "application/problem+json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "detail": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Creates a Image resource.",
+        "description": "Creates a Image resource.",
+        "parameters": [
+          {
+            "name": "x-uid",
+            "in": "header",
+            "description": "",
+            "required": false,
+            "deprecated": false,
+            "allowEmptyValue": false,
+            "schema": {
+              "type": "string"
+            },
+            "style": "simple",
+            "explode": false,
+            "allowReserved": false
+          }
+        ],
+        "requestBody": {
+          "description": "The new Image resource",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Image.ImagePayload"
+              }
+            },
+            "application/hal+json": {
+              "schema": {
+                "$ref": "#/components/schemas/Image.ImagePayload.jsonhal"
+              }
+            }
+          },
+          "required": true
+        },
+        "deprecated": false
+      },
+      "parameters": []
+    },
+    "/images/{uuid}": {
+      "get": {
+        "operationId": "getImageItem",
+        "tags": [
+          "Image"
+        ],
+        "responses": {
+          "200": {
+            "headers": {
+              "x-version": {
+                "description": "",
+                "required": false,
+                "deprecated": false,
+                "allowEmptyValue": false,
+                "schema": {
+                  "type": "string"
+                },
+                "style": "simple",
+                "explode": false,
+                "allowReserved": false
+              }
+            },
+            "description": "Image resource",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Image-image_details"
+                }
+              },
+              "application/hal+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Image.jsonhal-image_details"
+                }
+              }
+            }
+          },
+          "404": {
+            "headers": {
+              "x-version": {
+                "description": "",
+                "required": false,
+                "deprecated": false,
+                "allowEmptyValue": false,
+                "schema": {
+                  "type": "string"
+                },
+                "style": "simple",
+                "explode": false,
+                "allowReserved": false
+              }
+            },
+            "description": "Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "detail": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "application/problem+json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "detail": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "headers": {
+              "x-version": {
+                "description": "",
+                "required": false,
+                "deprecated": false,
+                "allowEmptyValue": false,
+                "schema": {
+                  "type": "string"
+                },
+                "style": "simple",
+                "explode": false,
+                "allowReserved": false
+              }
+            },
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "detail": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "application/problem+json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "detail": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Retrieves a Image resource.",
+        "description": "Retrieves a Image resource.",
+        "parameters": [
+          {
+            "name": "uuid",
+            "in": "path",
+            "description": "Image identifier",
+            "required": true,
+            "deprecated": false,
+            "allowEmptyValue": false,
+            "schema": {
+              "type": "string"
+            },
+            "style": "simple",
+            "explode": false,
+            "allowReserved": false
+          },
+          {
+            "name": "x-uid",
+            "in": "header",
+            "description": "",
+            "required": false,
+            "deprecated": false,
+            "allowEmptyValue": false,
+            "schema": {
+              "type": "string"
+            },
+            "style": "simple",
+            "explode": false,
+            "allowReserved": false
+          }
+        ],
+        "deprecated": false
+      },
+      "parameters": [],
+      "put": {
+        "operationId": "putImageItem",
+        "tags": [
+          "Image"
+        ],
+        "responses": {
+          "200": {
+            "headers": {
+              "x-version": {
+                "description": "",
+                "required": false,
+                "deprecated": false,
+                "allowEmptyValue": false,
+                "schema": {
+                  "type": "string"
+                },
+                "style": "simple",
+                "explode": false,
+                "allowReserved": false
+              }
+            },
+            "description": "Image resource updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Image-image_details"
+                }
+              },
+              "application/hal+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Image.jsonhal-image_details"
+                }
+              }
+            },
+            "links": {}
+          },
+          "400": {
+            "headers": {
+              "x-version": {
+                "description": "",
+                "required": false,
+                "deprecated": false,
+                "allowEmptyValue": false,
+                "schema": {
+                  "type": "string"
+                },
+                "style": "simple",
+                "explode": false,
+                "allowReserved": false
+              }
+            },
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "detail": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "application/problem+json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "detail": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "headers": {
+              "x-version": {
+                "description": "",
+                "required": false,
+                "deprecated": false,
+                "allowEmptyValue": false,
+                "schema": {
+                  "type": "string"
+                },
+                "style": "simple",
+                "explode": false,
+                "allowReserved": false
+              }
+            },
+            "description": "Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "detail": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "application/problem+json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "detail": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "headers": {
+              "x-version": {
+                "description": "",
+                "required": false,
+                "deprecated": false,
+                "allowEmptyValue": false,
+                "schema": {
+                  "type": "string"
+                },
+                "style": "simple",
+                "explode": false,
+                "allowReserved": false
+              }
+            },
+            "description": "Unprocessable entity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "detail": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "application/problem+json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "detail": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "headers": {
+              "x-version": {
+                "description": "",
+                "required": false,
+                "deprecated": false,
+                "allowEmptyValue": false,
+                "schema": {
+                  "type": "string"
+                },
+                "style": "simple",
+                "explode": false,
+                "allowReserved": false
+              }
+            },
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "detail": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "application/problem+json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "detail": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Replaces the Image resource.",
+        "description": "Replaces the Image resource.",
+        "parameters": [
+          {
+            "name": "uuid",
+            "in": "path",
+            "description": "Image identifier",
+            "required": true,
+            "deprecated": false,
+            "allowEmptyValue": false,
+            "schema": {
+              "type": "string"
+            },
+            "style": "simple",
+            "explode": false,
+            "allowReserved": false
+          },
+          {
+            "name": "x-uid",
+            "in": "header",
+            "description": "",
+            "required": false,
+            "deprecated": false,
+            "allowEmptyValue": false,
+            "schema": {
+              "type": "string"
+            },
+            "style": "simple",
+            "explode": false,
+            "allowReserved": false
+          }
+        ],
+        "requestBody": {
+          "description": "The updated Image resource",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Image.ImagePayload"
+              }
+            },
+            "application/hal+json": {
+              "schema": {
+                "$ref": "#/components/schemas/Image.ImagePayload.jsonhal"
+              }
+            }
+          },
+          "required": true
+        },
+        "deprecated": false
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Image": {
+        "type": "object",
+        "description": "",
+        "deprecated": false,
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "uuid": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "src": {
+            "type": "string"
+          },
+          "alternativeText": {
+            "nullable": true,
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "dateCreated": {
+            "readOnly": true,
+            "type": "string",
+            "format": "date-time"
+          },
+          "dateModified": {
+            "readOnly": true,
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "Image-image_details": {
+        "type": "object",
+        "description": "",
+        "deprecated": false,
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "uuid": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "src": {
+            "type": "string"
+          },
+          "alternativeText": {
+            "nullable": true,
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "dateCreated": {
+            "readOnly": true,
+            "type": "string",
+            "format": "date-time"
+          },
+          "dateModified": {
+            "readOnly": true,
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "Image-image_list": {
+        "type": "object",
+        "description": "",
+        "deprecated": false,
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "uuid": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "src": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "dateCreated": {
+            "readOnly": true,
+            "type": "string",
+            "format": "date-time"
+          },
+          "dateModified": {
+            "readOnly": true,
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "Image.ImagePayload": {
+        "type": "object",
+        "description": "",
+        "deprecated": false,
+        "required": [
+          "title",
+          "type",
+          "file"
+        ],
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "type": {
+            "enum": [
+              "avatar",
+              "skill"
+            ],
+            "type": "string"
+          },
+          "alternativeText": {
+            "type": "string"
+          },
+          "file": {
+            "type": "string"
+          }
+        }
+      },
+      "Image.ImagePayload.jsonhal": {
+        "type": "object",
+        "description": "",
+        "deprecated": false,
+        "required": [
+          "title",
+          "type",
+          "file"
+        ],
+        "properties": {
+          "_links": {
+            "type": "object",
+            "properties": {
+              "self": {
+                "type": "object",
+                "properties": {
+                  "href": {
+                    "type": "string",
+                    "format": "iri-reference"
+                  }
+                }
+              }
+            }
+          },
+          "title": {
+            "type": "string"
+          },
+          "type": {
+            "enum": [
+              "avatar",
+              "skill"
+            ],
+            "type": "string"
+          },
+          "alternativeText": {
+            "type": "string"
+          },
+          "file": {
+            "type": "string"
+          }
+        }
+      },
+      "Image.Transition": {
+        "type": "object",
+        "description": "",
+        "deprecated": false,
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "froms": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "tos": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "Image.Transition.jsonhal": {
+        "type": "object",
+        "description": "",
+        "deprecated": false,
+        "properties": {
+          "_links": {
+            "type": "object",
+            "properties": {
+              "self": {
+                "type": "object",
+                "properties": {
+                  "href": {
+                    "type": "string",
+                    "format": "iri-reference"
+                  }
+                }
+              }
+            }
+          },
+          "name": {
+            "type": "string"
+          },
+          "froms": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "tos": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "Image.jsonhal-image_details": {
+        "type": "object",
+        "description": "",
+        "deprecated": false,
+        "properties": {
+          "_links": {
+            "type": "object",
+            "properties": {
+              "self": {
+                "type": "object",
+                "properties": {
+                  "href": {
+                    "type": "string",
+                    "format": "iri-reference"
+                  }
+                }
+              }
+            }
+          },
+          "title": {
+            "type": "string"
+          },
+          "uuid": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "src": {
+            "type": "string"
+          },
+          "alternativeText": {
+            "nullable": true,
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "dateCreated": {
+            "readOnly": true,
+            "type": "string",
+            "format": "date-time"
+          },
+          "dateModified": {
+            "readOnly": true,
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "Image.jsonhal-image_list": {
+        "type": "object",
+        "description": "",
+        "deprecated": false,
+        "properties": {
+          "_links": {
+            "type": "object",
+            "properties": {
+              "self": {
+                "type": "object",
+                "properties": {
+                  "href": {
+                    "type": "string",
+                    "format": "iri-reference"
+                  }
+                }
+              }
+            }
+          },
+          "title": {
+            "type": "string"
+          },
+          "uuid": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "src": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "dateCreated": {
+            "readOnly": true,
+            "type": "string",
+            "format": "date-time"
+          },
+          "dateModified": {
+            "readOnly": true,
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      }
+    },
+    "responses": {},
+    "parameters": {},
+    "examples": {},
+    "requestBodies": {},
+    "headers": {},
+    "securitySchemes": {
+      "jwt": {
+        "type": "apiKey",
+        "description": "Value for the Authorization header parameter.",
+        "name": "Authorization",
+        "in": "header"
+      },
+      "apiKey": {
+        "type": "apiKey",
+        "description": "Value for the Authorization header parameter.",
+        "name": "apiKey",
+        "in": "query"
+      }
+    }
+  },
+  "security": [
+    {
+      "apiKey": []
+    },
+    {
+      "jwt": []
+    }
+  ],
+  "tags": []
+}

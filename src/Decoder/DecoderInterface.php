@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace TwentytwoLabs\Api\Decoder;
+namespace TwentytwoLabs\ApiValidator\Decoder;
 
 interface DecoderInterface
 {

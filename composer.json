@@ -9,48 +9,46 @@
     ],
     "autoload": {
         "psr-4": {
-            "TwentytwoLabs\\Api\\": "src/"
+            "TwentytwoLabs\\ApiValidator\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "TwentytwoLabs\\Api\\Tests\\": "tests/"
-        },
-        "files": [
-            "vendor/phpunit/phpunit/src/Framework/Assert/Functions.php"
-        ]
-    },
-    "require": {
-        "php": ">=8.0",
-        "ext-json": "*",
-        "psr/http-message": "^1.0",
-        "psr/cache": ">=1.0",
-        "justinrainbow/json-schema": "^5.0",
-        "rize/uri-template": "^0.3"
-    },
-    "require-dev": {
-        "phpunit/phpunit": "^9.5",
-        "guzzlehttp/psr7": "^1.3",
-        "squizlabs/php_codesniffer": "^3.3",
-        "symfony/yaml": "^3.4 || ^4.0 || ^5.0 || ^6.0",
-        "symfony/serializer": "^3.4 || ^4.0 || ^5.0 || ^6.0",
-        "infection/infection": "^0.25",
-        "friendsofphp/php-cs-fixer": "^3.4"
-    },
-    "scripts": {
-        "test": "vendor/bin/phpunit --stop-on-failure --stop-on-error",
-        "test-coverage": "vendor/bin/phpunit --disallow-test-output --coverage-html=coverage --coverage-xml=coverage/coverage-xml --log-junit=coverage/junit.xml --coverage-text --colors=always --stop-on-failure --stop-on-error && vendor/bin/infection --threads=4 --coverage=coverage --only-covered",
-        "cs": "vendor/bin/phpcs --standard=phpcs.xml.dist src",
-        "cs-fixer": "vendor/friendsofphp/php-cs-fixer/php-cs-fixer fix"
-    },
-    "suggest": {
-        "symfony/yaml": "Allow the SwaggerSchemaFactory to handle YAML files",
-        "symfony/serializer": "Implementation that can decode JSON or XML request bodies"
+            "TwentytwoLabs\\ApiValidator\\Tests\\": "tests/"
+        }
     },
     "config": {
         "allow-plugins": {
             "ocramius/package-versions": true,
             "infection/extension-installer": true
         }
+    },
+    "scripts": {
+        "test": "vendor/bin/phpunit --stop-on-failure --stop-on-error --display-warnings",
+        "test-coverage": "vendor/bin/phpunit --stop-on-failure --stop-on-error --display-warnings --disallow-test-output --coverage-html=coverage --coverage-xml=coverage/coverage-xml --log-junit=coverage/junit.xml --coverage-text --colors=always --stop-on-failure --stop-on-error && vendor/bin/infection --threads=4 --coverage=coverage --only-covered",
+        "cs": "vendor/bin/phpcs --standard=phpcs.xml.dist src tests",
+        "cs-fixer": "vendor/friendsofphp/php-cs-fixer/php-cs-fixer fix"
+    },
+    "suggest": {
+        "symfony/yaml": "Allow the SwaggerSchemaFactory to handle YAML files",
+        "symfony/serializer": "Implementation that can decode JSON or XML request bodies"
+    },
+    "require": {
+        "php": ">=8.0",
+        "ext-json": "*",
+        "psr/http-message": "^2.0",
+        "psr/cache": ">=1.0",
+        "justinrainbow/json-schema": "^5.0",
+        "rize/uri-template": "^0.3"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^10.4",
+        "guzzlehttp/psr7": "^2.6",
+        "squizlabs/php_codesniffer": "^3.3",
+        "symfony/yaml": "^5.0 || ^6.0 || ^7.0",
+        "symfony/serializer": "^5.0 || ^6.0 || ^7.0",
+        "infection/infection": "^0.27",
+        "friendsofphp/php-cs-fixer": "^3.4",
+        "symfony/var-dumper": "^5.0 || ^6.0 || ^7.0"
     }
 }

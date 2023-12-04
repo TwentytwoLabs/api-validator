@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace TwentytwoLabs\Api\Decoder\Adapter;
+namespace TwentytwoLabs\ApiValidator\Decoder\Adapter;
 
 use Symfony\Component\Serializer\Encoder\DecoderInterface as SymfonyDecoderInterface;
-use TwentytwoLabs\Api\Decoder\DecoderInterface;
+use TwentytwoLabs\ApiValidator\Decoder\DecoderInterface;
 
-class SymfonyDecoderAdapter implements DecoderInterface
+final class SymfonyDecoderAdapter implements DecoderInterface
 {
     private SymfonyDecoderInterface $decoder;
 
@@ -25,13 +25,6 @@ class SymfonyDecoderAdapter implements DecoderInterface
             $context['json_decode_associative'] = false;
         }
 
-        $decoded = $this->decoder->decode($data, $format, $context);
-
-        if ('xml' === $format) {
-            // the JSON schema validator need an object hierarchy
-            $decoded = json_decode(json_encode($decoded));
-        }
-
-        return $decoded;
+        return $this->decoder->decode($data, $format, $context);
     }
 }

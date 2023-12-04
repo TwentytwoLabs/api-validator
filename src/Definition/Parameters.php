@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace TwentytwoLabs\Api\Definition;
+namespace TwentytwoLabs\ApiValidator\Definition;
 
-class Parameters implements \Serializable, \IteratorAggregate
+final class Parameters implements \IteratorAggregate
 {
     /**
      * @var Parameter[]
@@ -25,52 +25,62 @@ class Parameters implements \Serializable, \IteratorAggregate
         }
     }
 
-    public function hasBodySchema(): bool
+    public function hasHeadersSchema(): bool
     {
-        $body = $this->getBody();
-
-        return null !== $body && $body->hasSchema();
+        return !empty($this->getHeadersSchema());
     }
 
-    public function getBodySchema(): ?\stdClass
+    public function getHeadersSchema(): array
     {
-        return null === $this->getBody() ? null : $this->getBody()->getSchema();
+        return $this->getSchema($this->getHeaders());
     }
 
     public function hasPathSchema(): bool
     {
-        return null !== $this->getPathSchema();
+        return !empty($this->getPathSchema());
     }
 
-    public function getPathSchema(): ?\stdClass
+    public function getPathSchema(): array
     {
         return $this->getSchema($this->getPath());
     }
 
     public function hasQueryParametersSchema(): bool
     {
-        return null !== $this->getQueryParametersSchema();
+        return !empty($this->getQueryParametersSchema());
     }
 
-    /**
-     * JSON Schema for the query parameters.
-     */
-    public function getQueryParametersSchema(): ?\stdClass
+    public function getQueryParametersSchema(): array
     {
         return $this->getSchema($this->getQuery());
     }
 
-    public function hasHeadersSchema(): bool
+    public function hasBodySchema(): bool
     {
-        return null !== $this->getHeadersSchema();
+        $body = $this->getBody();
+        if (null === $body) {
+            return false;
+        }
+
+        return $body->hasSchema();
+    }
+
+    public function getBodySchema(): array
+    {
+        $body = $this->getBody();
+        if (null === $body) {
+            return [];
+        }
+
+        return $body->getSchema();
     }
 
     /**
-     * JSON Schema for the headers.
+     * @return Parameter[]
      */
-    public function getHeadersSchema(): ?\stdClass
+    public function getHeaders(): array
     {
-        return $this->getSchema($this->getHeaders());
+        return $this->findByLocation('header');
     }
 
     /**
@@ -89,75 +99,39 @@ class Parameters implements \Serializable, \IteratorAggregate
         return $this->findByLocation('query');
     }
 
-    /**
-     * @return Parameter[]
-     */
-    public function getHeaders(): array
-    {
-        return $this->findByLocation('header');
-    }
-
     public function getBody(): ?Parameter
     {
         $match = $this->findByLocation('body');
-        if (empty($match)) {
-            return null;
-        }
 
-        return current($match);
+        return empty($match) ? null : current($match);
     }
 
     public function getByName(string $name): ?Parameter
     {
-        if (!isset($this->parameters[$name])) {
-            return null;
-        }
-
-        return $this->parameters[$name];
+        return $this->parameters[$name] ?? null;
     }
 
-    // Serializable
-    public function __serialize(): array
+    public function addParameter(Parameter $parameter): void
     {
-        return ['parameters' => $this->parameters];
-    }
-
-    public function __unserialize(array $data): void
-    {
-        $this->parameters = $data['parameters'];
-    }
-
-    public function serialize(): string
-    {
-        return serialize($this->__serialize());
-    }
-
-    /**
-     * @param string $serialized
-     */
-    public function unserialize($serialized)
-    {
-        $this->__unserialize(unserialize($serialized));
+        $this->parameters[$parameter->getName()] = $parameter;
     }
 
     /**
      * @param Parameter[] $parameters
      */
-    private function getSchema(array $parameters): ?\stdClass
+    private function getSchema(array $parameters): array
     {
         if (empty($parameters)) {
-            return null;
+            return [];
         }
 
-        $schema = new \stdClass();
-        $schema->type = 'object';
-        $schema->required = [];
-        $schema->properties = new \stdClass();
+        $schema = ['type' => 'object', 'required' => [], 'properties' => []];
         foreach ($parameters as $name => $parameter) {
             if ($parameter->isRequired()) {
-                $schema->required[] = $parameter->getName();
+                $schema['required'][] = $parameter->getName();
             }
-            $schema->properties->{$name} = $parameter->getSchema();
+
+            $schema['properties'][$name] = $parameter->getSchema();
         }
 
         return $schema;
@@ -174,10 +148,5 @@ class Parameters implements \Serializable, \IteratorAggregate
                 return $parameter->getLocation() === $location;
             }
         );
-    }
-
-    private function addParameter(Parameter $parameter)
-    {
-        $this->parameters[$parameter->getName()] = $parameter;
     }
 }
