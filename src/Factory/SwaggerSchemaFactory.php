@@ -9,8 +9,20 @@ use TwentytwoLabs\ApiValidator\Definition\OperationDefinitions;
 use TwentytwoLabs\ApiValidator\Definition\Parameters;
 use TwentytwoLabs\ApiValidator\Definition\ResponseDefinition;
 
+/**
+ * @deprecated
+ */
 final class SwaggerSchemaFactory extends AbstractSchemaFactory
 {
+    public function __construct()
+    {
+        trigger_deprecation(
+            'twentytwo-labs/api-validator',
+            '2.0',
+            'Class "%s" is deprecated. You should update to OpenApi'
+        );
+    }
+
     protected function createOperationDefinitions(array $schema): OperationDefinitions
     {
         $definitions = [];

@@ -17,7 +17,7 @@ use TwentytwoLabs\ApiValidator\Definition\OperationDefinition;
 use TwentytwoLabs\ApiValidator\Definition\ResponseDefinition;
 use TwentytwoLabs\ApiValidator\Normalizer\QueryParamsNormalizer;
 
-final class MessageValidator
+class MessageValidator
 {
     private Validator $validator;
     private array $violations = [];
