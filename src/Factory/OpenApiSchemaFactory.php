@@ -6,6 +6,7 @@ namespace TwentytwoLabs\ApiValidator\Factory;
 
 use TwentytwoLabs\ApiValidator\Definition\OperationDefinition;
 use TwentytwoLabs\ApiValidator\Definition\OperationDefinitions;
+use TwentytwoLabs\ApiValidator\Definition\Parameter;
 use TwentytwoLabs\ApiValidator\Definition\Parameters;
 use TwentytwoLabs\ApiValidator\Definition\ResponseDefinition;
 
@@ -73,8 +74,9 @@ final class OpenApiSchemaFactory extends AbstractSchemaFactory
                     throw new \LogicException(sprintf('You must define a security scheme with name %s', $key));
                 }
 
+                $securityScheme['in'] = $securityScheme['in'] ?? 'header';
                 $securityScheme['type'] = 'string';
-                $securityScheme['name'] = strtolower($securityScheme['name']);
+                $securityScheme['name'] = 'header' !== $securityScheme['in'] ? strtolower($key) : 'authorization';
 
                 $securities[] = $this->createParameter($securityScheme);
             }
@@ -90,16 +92,8 @@ final class OpenApiSchemaFactory extends AbstractSchemaFactory
             $requestParameters[] = $this->createParameter($parameter);
         }
 
-        $contentTypes = [];
-        foreach ($definition['requestBody']['content'] ?? [] as $contentType => $content) {
-            $content['name'] = 'body';
-            $content['in'] = 'body';
-            $content['required'] = true;
-            $requestParameters[] = $this->createParameter($content);
-            if (!in_array($contentType, $contentTypes)) {
-                $contentTypes[] = $contentType;
-            }
-        }
+        $contentTypes = array_keys($definition['requestBody']['content'] ?? []);
+        $requestParameters[] = $this->createBodyParameter($definition['requestBody']['content'] ?? []);
 
         if (!empty($contentTypes)) {
             $requestParameters[] = $this->createParameter([
@@ -115,6 +109,16 @@ final class OpenApiSchemaFactory extends AbstractSchemaFactory
         }
 
         return new Parameters($requestParameters);
+    }
+
+    private function createBodyParameter(array $contents): Parameter
+    {
+        $requestParameters = ['name' => 'body', 'in' => 'body', 'required' => true, 'schema' => []];
+        foreach ($contents as $contentType => $content) {
+            $requestParameters['schema'][$contentType] = $content['schema'];
+        }
+
+        return $this->createParameter($requestParameters);
     }
 
     private function createResponseDefinitions(array $responses): array

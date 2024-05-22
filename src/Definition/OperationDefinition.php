@@ -10,8 +10,12 @@ class OperationDefinition implements MessageDefinition
     private string $operationId;
     private string $pathTemplate;
     private Parameters $parameters;
+    /** @var array<int|string, ResponseDefinition>  */
     private array $responses = [];
 
+    /**
+     * @param ResponseDefinition[] $responses
+     */
     public function __construct(
         string $method,
         string $operationId,

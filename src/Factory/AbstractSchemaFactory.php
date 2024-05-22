@@ -29,7 +29,10 @@ abstract class AbstractSchemaFactory implements SchemaFactoryInterface
         $uriRetriever = match ($extension) {
             'yml', 'yaml' => new YamlUriRetriever(),
             'json' => new UriRetriever(),
-            default => throw new \InvalidArgumentException(sprintf('file "%s" does not provide a supported extension choose either json, yml or yaml', $schemaFile)),
+            default => throw new \InvalidArgumentException(sprintf(
+                'file "%s" does not provide a supported extension choose either json, yml or yaml',
+                $schemaFile
+            )),
         };
 
         $schemaStorage = new SchemaStorage($uriRetriever, new UriResolver());

@@ -44,7 +44,12 @@ final class OpenApiSchemaFactoryTest extends TestCase
         $this->assertInstanceOf(Parameters::class, $parameters);
 
         $this->assertNull($parameters->getByName('content-type'));
-        $this->assertNull($parameters->getByName('body'));
+        $body = $parameters->getByName('body');
+        $this->assertInstanceOf(Parameter::class, $body);
+        $this->assertSame('body', $body->getLocation());
+        $this->assertSame('body', $body->getName());
+        $this->assertTrue($body->isRequired());
+        $this->assertSame([], $body->getSchema());
 
         $this->assertTrue($operation->hasHeadersSchema());
         $this->assertSame(
@@ -381,29 +386,43 @@ final class OpenApiSchemaFactoryTest extends TestCase
         $this->assertTrue($bodyParameter->hasSchema());
         $this->assertSame(
             [
-                'type' => 'object',
-                'description' => '',
-                'deprecated' => false,
-                'required' => ['title', 'type', 'file'],
-                'properties' => [
-                    '_links' => [
-                        'type' => 'object',
-                        'properties' => [
-                            'self' => [
-                                'type' => 'object',
-                                'properties' => [
-                                    'href' => [
-                                        'type' => 'string',
-                                        'format' => 'iri-reference',
+                'application/json' => [
+                    'type' => 'object',
+                    'description' => '',
+                    'deprecated' => false,
+                    'required' => ['title', 'type', 'file'],
+                    'properties' => [
+                        'title' => ['type' => 'string'],
+                        'type' => ['enum' => ['avatar', 'skill'], 'type' => 'string'],
+                        'alternativeText' => ['type' => 'string'],
+                        'file' => ['type' => 'string'],
+                    ],
+                ],
+                'application/hal+json' => [
+                    'type' => 'object',
+                    'description' => '',
+                    'deprecated' => false,
+                    'required' => ['title', 'type', 'file'],
+                    'properties' => [
+                        '_links' => [
+                            'type' => 'object',
+                            'properties' => [
+                                'self' => [
+                                    'type' => 'object',
+                                    'properties' => [
+                                        'href' => [
+                                            'type' => 'string',
+                                            'format' => 'iri-reference',
+                                        ],
                                     ],
                                 ],
                             ],
                         ],
+                        'title' => ['type' => 'string'],
+                        'type' => ['enum' => ['avatar', 'skill'], 'type' => 'string'],
+                        'alternativeText' => ['type' => 'string'],
+                        'file' => ['type' => 'string'],
                     ],
-                    'title' => ['type' => 'string'],
-                    'type' => ['enum' => ['avatar', 'skill'], 'type' => 'string'],
-                    'alternativeText' => ['type' => 'string'],
-                    'file' => ['type' => 'string'],
                 ],
             ],
             $bodyParameter->getSchema()
@@ -478,29 +497,43 @@ final class OpenApiSchemaFactoryTest extends TestCase
         $this->assertTrue($operation->hasBodySchema());
         $this->assertSame(
             [
-                'type' => 'object',
-                'description' => '',
-                'deprecated' => false,
-                'required' => ['title', 'type', 'file'],
-                'properties' => [
-                    '_links' => [
-                        'type' => 'object',
-                        'properties' => [
-                            'self' => [
-                                'type' => 'object',
-                                'properties' => [
-                                    'href' => [
-                                        'type' => 'string',
-                                        'format' => 'iri-reference',
+                'application/json' => [
+                    'type' => 'object',
+                    'description' => '',
+                    'deprecated' => false,
+                    'required' => ['title', 'type', 'file'],
+                    'properties' => [
+                        'title' => ['type' => 'string'],
+                        'type' => ['enum' => ['avatar', 'skill'], 'type' => 'string'],
+                        'alternativeText' => ['type' => 'string'],
+                        'file' => ['type' => 'string'],
+                    ],
+                ],
+                'application/hal+json' => [
+                    'type' => 'object',
+                    'description' => '',
+                    'deprecated' => false,
+                    'required' => ['title', 'type', 'file'],
+                    'properties' => [
+                        '_links' => [
+                            'type' => 'object',
+                            'properties' => [
+                                'self' => [
+                                    'type' => 'object',
+                                    'properties' => [
+                                        'href' => [
+                                            'type' => 'string',
+                                            'format' => 'iri-reference',
+                                        ],
                                     ],
                                 ],
                             ],
                         ],
+                        'title' => ['type' => 'string'],
+                        'type' => ['enum' => ['avatar', 'skill'], 'type' => 'string'],
+                        'alternativeText' => ['type' => 'string'],
+                        'file' => ['type' => 'string'],
                     ],
-                    'title' => ['type' => 'string'],
-                    'type' => ['enum' => ['avatar', 'skill'], 'type' => 'string'],
-                    'alternativeText' => ['type' => 'string'],
-                    'file' => ['type' => 'string'],
                 ],
             ],
             $operation->getBodySchema()
@@ -723,29 +756,43 @@ final class OpenApiSchemaFactoryTest extends TestCase
         $this->assertTrue($operation->hasBodySchema());
         $this->assertSame(
             [
-                'type' => 'object',
-                'description' => '',
-                'deprecated' => false,
-                'required' => ['title', 'type', 'file'],
-                'properties' => [
-                    '_links' => [
-                        'type' => 'object',
-                        'properties' => [
-                            'self' => [
-                                'type' => 'object',
-                                'properties' => [
-                                    'href' => [
-                                        'type' => 'string',
-                                        'format' => 'iri-reference',
+                'application/json' => [
+                    'type' => 'object',
+                    'description' => '',
+                    'deprecated' => false,
+                    'required' => ['title', 'type', 'file'],
+                    'properties' => [
+                        'title' => ['type' => 'string'],
+                        'type' => ['enum' => ['avatar', 'skill'], 'type' => 'string'],
+                        'alternativeText' => ['type' => 'string'],
+                        'file' => ['type' => 'string'],
+                    ],
+                ],
+                'application/hal+json' => [
+                    'type' => 'object',
+                    'description' => '',
+                    'deprecated' => false,
+                    'required' => ['title', 'type', 'file'],
+                    'properties' => [
+                        '_links' => [
+                            'type' => 'object',
+                            'properties' => [
+                                'self' => [
+                                    'type' => 'object',
+                                    'properties' => [
+                                        'href' => [
+                                            'type' => 'string',
+                                            'format' => 'iri-reference',
+                                        ],
                                     ],
                                 ],
                             ],
                         ],
+                        'title' => ['type' => 'string'],
+                        'type' => ['enum' => ['avatar', 'skill'], 'type' => 'string'],
+                        'alternativeText' => ['type' => 'string'],
+                        'file' => ['type' => 'string'],
                     ],
-                    'title' => ['type' => 'string'],
-                    'type' => ['enum' => ['avatar', 'skill'], 'type' => 'string'],
-                    'alternativeText' => ['type' => 'string'],
-                    'file' => ['type' => 'string'],
                 ],
             ],
             $operation->getBodySchema()

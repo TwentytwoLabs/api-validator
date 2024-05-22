@@ -27,7 +27,10 @@ class OperationDefinitions implements \IteratorAggregate
             return $this->definitions[$operationId];
         }
 
-        throw new \InvalidArgumentException(sprintf('Unable to find request definition for operationId %s', $operationId));
+        throw new \InvalidArgumentException(sprintf(
+            'Unable to find request definition for operationId %s',
+            $operationId
+        ));
     }
 
     // IteratorAggregate
