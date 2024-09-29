@@ -10,7 +10,7 @@ use TwentytwoLabs\ApiValidator\Definition\Parameter;
 
 final class ParameterTest extends TestCase
 {
-    public function testShouldThrowExceptionBecauseItIsBadLocation()
+    public function testShouldThrowExceptionBecauseItIsBadLocation(): void
     {
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('footer is not a supported parameter location, supported: header, path, query, body, formData');
@@ -19,7 +19,7 @@ final class ParameterTest extends TestCase
     }
 
     #[DataProvider('getData')]
-    public function testShouldBuildParametersWithDefaultValue(string $location)
+    public function testShouldBuildParametersWithDefaultValue(string $location): void
     {
         $parameter = new Parameter($location, 'foo');
         $this->assertSame($location, $parameter->getLocation());
@@ -29,8 +29,11 @@ final class ParameterTest extends TestCase
         $this->assertEmpty($parameter->getSchema());
     }
 
+    /**
+     * @param array<int|string, mixed> $schema
+     */
     #[DataProvider('getData')]
-    public function testShouldBuildParameters(string $location, bool $required, array $schema)
+    public function testShouldBuildParameters(string $location, bool $required, array $schema): void
     {
         $parameter = new Parameter($location, 'foo', $required, $schema);
         $this->assertSame($location, $parameter->getLocation());
@@ -40,8 +43,11 @@ final class ParameterTest extends TestCase
         $this->assertSame($schema, $parameter->getSchema());
     }
 
+    /**
+     * @param array<int|string, mixed> $schema
+     */
     #[DataProvider('getData')]
-    public function testShouldSerializable(string $location, bool $required, array $schema)
+    public function testShouldSerializable(string $location, bool $required, array $schema): void
     {
         $parameter = new Parameter($location, 'foo', $required, $schema);
 
@@ -54,6 +60,9 @@ final class ParameterTest extends TestCase
         $this->assertSame($schema, $parameter->getSchema());
     }
 
+    /**
+     * @return array<int, mixed>
+     */
     public static function getData(): array
     {
         return [

@@ -20,6 +20,7 @@ use TwentytwoLabs\ApiValidator\Normalizer\QueryParamsNormalizer;
 class MessageValidator
 {
     private Validator $validator;
+    /** @var ConstraintViolation[] */
     private array $violations = [];
     private DecoderInterface $decoder;
 
@@ -163,6 +164,9 @@ class MessageValidator
         $this->validate($decodedBody, $definition->getBodySchema(), 'body');
     }
 
+    /**
+     * @param array<string, mixed> $schema
+     */
     private function validate(mixed $data, array $schema, string $location): void
     {
         $this->validator->check($data, json_decode(json_encode($schema)));
@@ -187,7 +191,7 @@ class MessageValidator
         $this->validator->reset();
     }
 
-    private function addViolation(ConstraintViolation $violation)
+    private function addViolation(ConstraintViolation $violation): void
     {
         $this->violations[] = $violation;
     }

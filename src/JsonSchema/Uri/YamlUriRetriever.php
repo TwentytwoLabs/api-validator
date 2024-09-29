@@ -10,6 +10,8 @@ use Symfony\Component\Yaml\Yaml;
 final class YamlUriRetriever extends UriRetriever
 {
     /**
+     * @var array<string, mixed>
+     *
      * @see loadSchema
      */
     private array $schemaCache = [];

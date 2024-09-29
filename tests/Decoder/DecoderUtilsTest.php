@@ -11,11 +11,14 @@ use TwentytwoLabs\ApiValidator\Decoder\DecoderUtils;
 final class DecoderUtilsTest extends TestCase
 {
     #[DataProvider('dataForExtractFormatFromContentType')]
-    public function testExtractFormatFromContentType(string $contentType, string $format)
+    public function testExtractFormatFromContentType(string $contentType, string $format): void
     {
         $this->assertSame($format, DecoderUtils::extractFormatFromContentType($contentType));
     }
 
+    /**
+     * @return array<int, array<int, string>>
+     */
     public static function dataForExtractFormatFromContentType(): array
     {
         return [

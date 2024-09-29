@@ -15,7 +15,7 @@ use TwentytwoLabs\ApiValidator\Schema;
 
 final class OpenApiSchemaFactoryTest extends TestCase
 {
-    public function testShouldNotLoadSchemaBecauseExtension()
+    public function testShouldNotLoadSchemaBecauseExtension(): void
     {
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessageMatches('#file "[^"]*" does not provide a supported extension choose either json, yml or yaml#');
@@ -25,7 +25,7 @@ final class OpenApiSchemaFactoryTest extends TestCase
     }
 
     #[DataProvider('getValidFiles')]
-    public function testShouldLoadSchemaWithOutBody(string $file, string|int $statusCode)
+    public function testShouldLoadSchemaWithOutBody(string $file, string|int $statusCode): void
     {
         $schema = $this->getSchema(sprintf('file://%s', $file));
 
@@ -127,7 +127,7 @@ final class OpenApiSchemaFactoryTest extends TestCase
         $this->assertSame(
             [
                 'type' => 'object',
-                'required' => ['x-version'],
+                'required' => [],
                 'properties' => [
                     'x-version' => [
                         'type' => 'string',
@@ -345,7 +345,7 @@ final class OpenApiSchemaFactoryTest extends TestCase
     }
 
     #[DataProvider('getValidFiles')]
-    public function testShouldLoadSchemaWithBody(string $file, string|int $statusCode)
+    public function testShouldLoadSchemaWithBody(string $file, string|int $statusCode): void
     {
         $schema = $this->getSchema(sprintf('file://%s', $file));
 
@@ -547,7 +547,7 @@ final class OpenApiSchemaFactoryTest extends TestCase
         $this->assertSame(
             [
                 'type' => 'object',
-                'required' => ['x-version'],
+                'required' => [],
                 'properties' => [
                     'x-version' => [
                         'type' => 'string',
@@ -623,7 +623,7 @@ final class OpenApiSchemaFactoryTest extends TestCase
         $this->assertSame(
             [
                 'type' => 'object',
-                'required' => ['x-version'],
+                'required' => [],
                 'properties' => [
                     'x-version' => [
                         'type' => 'string',
@@ -669,22 +669,8 @@ final class OpenApiSchemaFactoryTest extends TestCase
         );
     }
 
-    public static function getValidFiles(): array
-    {
-        $baseFile = './tests/Fixtures/v3/%s';
-
-        return [
-            [realpath(sprintf($baseFile, 'test.yaml')), 200],
-            [realpath(sprintf($baseFile, 'test.yml')), 200],
-            [realpath(sprintf($baseFile, 'test.json')), 200],
-            [realpath(sprintf($baseFile, 'test.yaml')), '200'],
-            [realpath(sprintf($baseFile, 'test.yml')), '200'],
-            [realpath(sprintf($baseFile, 'test.json')), '200'],
-        ];
-    }
-
     #[DataProvider('getFilesWithOutOperationId')]
-    public function testShouldLoadSchemaWithoutOperationId(string $file, string|int $statusCode)
+    public function testShouldLoadSchemaWithoutOperationId(string $file, string|int $statusCode): void
     {
         $schema = $this->getSchema(sprintf('file://%s', $file));
 
@@ -703,13 +689,22 @@ final class OpenApiSchemaFactoryTest extends TestCase
         $this->assertSame(
             [
                 'type' => 'object',
-                'required' => ['content-type', 'accept'],
+                'required' => ['x-foo', 'content-type', 'accept'],
                 'properties' => [
                     'authorization' => [
                         'type' => 'string',
                         'description' => 'Value for the Authorization header parameter.',
                     ],
                     'x-uid' => [
+                        'type' => 'string',
+                        'description' => '',
+                        'deprecated' => false,
+                        'allowEmptyValue' => false,
+                        'style' => 'simple',
+                        'explode' => false,
+                        'allowReserved' => false,
+                    ],
+                    'x-foo' => [
                         'type' => 'string',
                         'description' => '',
                         'deprecated' => false,
@@ -807,9 +802,27 @@ final class OpenApiSchemaFactoryTest extends TestCase
         $this->assertSame(
             [
                 'type' => 'object',
-                'required' => ['x-version'],
+                'required' => ['x-foo'],
                 'properties' => [
                     'x-version' => [
+                        'type' => 'string',
+                        'description' => '',
+                        'deprecated' => false,
+                        'allowEmptyValue' => false,
+                        'style' => 'simple',
+                        'explode' => false,
+                        'allowReserved' => false,
+                    ],
+                    'x-foo' => [
+                        'type' => 'string',
+                        'description' => '',
+                        'deprecated' => false,
+                        'allowEmptyValue' => false,
+                        'style' => 'simple',
+                        'explode' => false,
+                        'allowReserved' => false,
+                    ],
+                    'x-bar' => [
                         'type' => 'string',
                         'description' => '',
                         'deprecated' => false,
@@ -884,9 +897,27 @@ final class OpenApiSchemaFactoryTest extends TestCase
         $this->assertSame(
             [
                 'type' => 'object',
-                'required' => ['x-version'],
+                'required' => ['x-foo'],
                 'properties' => [
                     'x-version' => [
+                        'type' => 'string',
+                        'description' => '',
+                        'deprecated' => false,
+                        'allowEmptyValue' => false,
+                        'style' => 'simple',
+                        'explode' => false,
+                        'allowReserved' => false,
+                    ],
+                    'x-foo' => [
+                        'type' => 'string',
+                        'description' => '',
+                        'deprecated' => false,
+                        'allowEmptyValue' => false,
+                        'style' => 'simple',
+                        'explode' => false,
+                        'allowReserved' => false,
+                    ],
+                    'x-bar' => [
                         'type' => 'string',
                         'description' => '',
                         'deprecated' => false,
@@ -962,7 +993,7 @@ final class OpenApiSchemaFactoryTest extends TestCase
         $this->assertInstanceOf(Parameter::class, $versionParameter);
         $this->assertSame('header', $versionParameter->getLocation());
         $this->assertSame('x-version', $versionParameter->getName());
-        $this->assertTrue($versionParameter->isRequired());
+        $this->assertFalse($versionParameter->isRequired());
         $this->assertTrue($versionParameter->hasSchema());
         $this->assertSame(
             [
@@ -1035,6 +1066,44 @@ final class OpenApiSchemaFactoryTest extends TestCase
         );
     }
 
+    #[DataProvider('getFilesWithOutResponses')]
+    public function testShouldLoadSchemaWithoutResponse(string $file): void
+    {
+        $this->expectException(\LogicException::class);
+        $this->expectExceptionMessage('You need to specify at least one response for GET /images');
+
+        $this->getSchema(sprintf('file://%s', $file));
+    }
+
+    #[DataProvider('getFilesWithOutSecurity')]
+    public function testShouldLoadSchemaWithoutSecurity(string $file): void
+    {
+        $this->expectException(\LogicException::class);
+        $this->expectExceptionMessage('You must define a security scheme with name apiKey');
+
+        $this->getSchema(sprintf('file://%s', $file));
+    }
+
+    /**
+     * @return array<int, array<int, string|int>>
+     */
+    public static function getValidFiles(): array
+    {
+        $baseFile = './tests/Fixtures/v3/%s';
+
+        return [
+            [realpath(sprintf($baseFile, 'test.yaml')), 200],
+            [realpath(sprintf($baseFile, 'test.yml')), 200],
+            [realpath(sprintf($baseFile, 'test.json')), 200],
+            [realpath(sprintf($baseFile, 'test.yaml')), '200'],
+            [realpath(sprintf($baseFile, 'test.yml')), '200'],
+            [realpath(sprintf($baseFile, 'test.json')), '200'],
+        ];
+    }
+
+    /**
+     * @return array<int, array<int, string|int>>
+     */
     public static function getFilesWithOutOperationId(): array
     {
         $baseFile = './tests/Fixtures/v3/%s';
@@ -1049,15 +1118,9 @@ final class OpenApiSchemaFactoryTest extends TestCase
         ];
     }
 
-    #[DataProvider('getFilesWithOutResponses')]
-    public function testShouldLoadSchemaWithoutResponse(string $file)
-    {
-        $this->expectException(\LogicException::class);
-        $this->expectExceptionMessage('You need to specify at least one response for GET /images');
-
-        $this->getSchema(sprintf('file://%s', $file));
-    }
-
+    /**
+     * @return array<int, array<int, string>>
+     */
     public static function getFilesWithOutResponses(): array
     {
         $baseFile = './tests/Fixtures/v3/%s';
@@ -1069,15 +1132,9 @@ final class OpenApiSchemaFactoryTest extends TestCase
         ];
     }
 
-    #[DataProvider('getFilesWithOutSecurity')]
-    public function testShouldLoadSchemaWithoutSecurity(string $file)
-    {
-        $this->expectException(\LogicException::class);
-        $this->expectExceptionMessage('You must define a security scheme with name apiKey');
-
-        $this->getSchema(sprintf('file://%s', $file));
-    }
-
+    /**
+     * @return array<int, array<int, string>>
+     */
     public static function getFilesWithOutSecurity(): array
     {
         $baseFile = './tests/Fixtures/v3/%s';

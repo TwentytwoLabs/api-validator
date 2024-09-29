@@ -10,7 +10,7 @@ use TwentytwoLabs\ApiValidator\Definition\OperationDefinitions;
 
 final class OperationDefinitionsTest extends TestCase
 {
-    public function testShouldNotGetRequestDefinitionBecauseItIsNotFound()
+    public function testShouldNotGetRequestDefinitionBecauseItIsNotFound(): void
     {
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Unable to find request definition for operationId foo');
@@ -22,7 +22,7 @@ final class OperationDefinitionsTest extends TestCase
         $this->assertSame($requestDefinition, $requestDefinitions->getOperationDefinition('foo'));
     }
 
-    public function testShouldGetRequestDefinition()
+    public function testShouldGetRequestDefinition(): void
     {
         $requestDefinition = $this->createMock(OperationDefinition::class);
         $requestDefinition->expects($this->once())->method('getOperationId')->willReturn('foo');
@@ -31,7 +31,7 @@ final class OperationDefinitionsTest extends TestCase
         $this->assertSame($requestDefinition, $requestDefinitions->getOperationDefinition('foo'));
     }
 
-    public function testShouldValidateEachRequestDefinition()
+    public function testShouldValidateEachRequestDefinition(): void
     {
         $requestDefinitionFoo = $this->createMock(OperationDefinition::class);
         $requestDefinitionFoo->expects($this->once())->method('getOperationId')->willReturn('foo');

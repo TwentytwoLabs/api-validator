@@ -10,7 +10,7 @@ class OperationDefinition implements MessageDefinition
     private string $operationId;
     private string $pathTemplate;
     private Parameters $parameters;
-    /** @var array<int|string, ResponseDefinition>  */
+    /** @var array<int|string, ResponseDefinition> */
     private array $responses = [];
 
     /**
@@ -21,7 +21,7 @@ class OperationDefinition implements MessageDefinition
         string $operationId,
         string $pathTemplate,
         Parameters $parameters,
-        array $responses
+        array $responses,
     ) {
         $this->method = $method;
         $this->operationId = $operationId;
@@ -89,6 +89,9 @@ class OperationDefinition implements MessageDefinition
         return $this->parameters->hasPathSchema();
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function getPathSchema(): array
     {
         return $this->parameters->getPathSchema();
@@ -99,6 +102,9 @@ class OperationDefinition implements MessageDefinition
         return $this->parameters->hasQueryParametersSchema();
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function getQueryParametersSchema(): array
     {
         return $this->parameters->getQueryParametersSchema();
@@ -109,6 +115,9 @@ class OperationDefinition implements MessageDefinition
         return $this->parameters->hasBodySchema();
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function getBodySchema(): array
     {
         return $this->parameters->getBodySchema();

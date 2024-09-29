@@ -9,7 +9,7 @@ use TwentytwoLabs\ApiValidator\Validator\ConstraintViolation;
 
 final class ConstraintViolationTest extends TestCase
 {
-    public function testConstraintViolationToArray()
+    public function testConstraintViolationToArray(): void
     {
         $expectedArray = [
             'property' => 'property_one',

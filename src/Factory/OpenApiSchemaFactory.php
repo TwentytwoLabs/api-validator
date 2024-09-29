@@ -64,6 +64,11 @@ final class OpenApiSchemaFactory extends AbstractSchemaFactory
         return new OperationDefinitions($definitions);
     }
 
+    /**
+     * @param array<string, mixed> $schema
+     *
+     * @return Parameter[]
+     */
     private function createSecurityDefinitions(array $schema): array
     {
         $securities = [];
@@ -85,6 +90,10 @@ final class OpenApiSchemaFactory extends AbstractSchemaFactory
         return $securities;
     }
 
+    /**
+     * @param array<string, mixed>     $definition
+     * @param array<int|string, mixed> $securityDefinitions
+     */
     private function createRequestParameters(array $definition, array $securityDefinitions): Parameters
     {
         $requestParameters = array_key_exists('security', $definition) ? [] : $securityDefinitions;
@@ -111,6 +120,9 @@ final class OpenApiSchemaFactory extends AbstractSchemaFactory
         return new Parameters($requestParameters);
     }
 
+    /**
+     * @param array<string, mixed> $contents
+     */
     private function createBodyParameter(array $contents): Parameter
     {
         $requestParameters = ['name' => 'body', 'in' => 'body', 'required' => true, 'schema' => []];
@@ -121,6 +133,11 @@ final class OpenApiSchemaFactory extends AbstractSchemaFactory
         return $this->createParameter($requestParameters);
     }
 
+    /**
+     * @param array<int|string, mixed> $responses
+     *
+     * @return ResponseDefinition[]
+     */
     private function createResponseDefinitions(array $responses): array
     {
         $responseDefinitions = [];
@@ -131,13 +148,16 @@ final class OpenApiSchemaFactory extends AbstractSchemaFactory
         return $responseDefinitions;
     }
 
+    /**
+     * @param array<string, mixed> $response
+     */
     private function createResponseDefinition(int|string $statusCode, array $response): ResponseDefinition
     {
         $parameters = [];
         foreach ($response['headers'] ?? [] as $headerName => $schema) {
             $schema['in'] = 'header';
             $schema['name'] = $headerName;
-            $schema['required'] = true;
+            $schema['required'] = $schema['required'] ?? false;
             $parameters[] = $this->createParameter($schema);
         }
 

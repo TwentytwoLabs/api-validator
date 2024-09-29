@@ -13,7 +13,7 @@ use TwentytwoLabs\ApiValidator\Definition\ResponseDefinition;
 final class ResponseDefinitionTest extends TestCase
 {
     #[DataProvider('getData')]
-    public function testShouldValidateGetteur($statusCode)
+    public function testShouldValidateGetteur(int|string $statusCode): void
     {
         $bodySchema = [
             'application/json' => [
@@ -71,6 +71,9 @@ final class ResponseDefinitionTest extends TestCase
         $this->assertSame($body, $parameters->getBody());
     }
 
+    /**
+     * @return array<int, array<int, int|string>>
+     */
     public static function getData(): array
     {
         return [

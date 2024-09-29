@@ -25,7 +25,7 @@ class Schema
     public function getOperationDefinition(
         string $operationId = '',
         string $method = '',
-        string $path = ''
+        string $path = '',
     ): OperationDefinition {
         if (!empty($operationId)) {
             return $this->operationDefinitions->getOperationDefinition($operationId);

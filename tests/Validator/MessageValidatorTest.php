@@ -6,6 +6,7 @@ namespace TwentytwoLabs\ApiValidator\Tests\Validator;
 
 use JsonSchema\Validator;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -20,8 +21,8 @@ use TwentytwoLabs\ApiValidator\Validator\MessageValidator;
 
 final class MessageValidatorTest extends TestCase
 {
-    private Validator $validator;
-    private DecoderInterface $decoder;
+    private Validator|MockObject $validator;
+    private DecoderInterface|MockObject $decoder;
 
     protected function setUp(): void
     {
@@ -29,7 +30,7 @@ final class MessageValidatorTest extends TestCase
         $this->decoder = $this->createMock(DecoderInterface::class);
     }
 
-    public function testShouldNotValidateRequestForGetCollectionBecauseContentTypeIsNotMatching()
+    public function testShouldNotValidateRequestForGetCollectionBecauseContentTypeIsNotMatching(): void
     {
         $headersSchema = [
             'type' => 'object',
@@ -136,7 +137,7 @@ final class MessageValidatorTest extends TestCase
         );
     }
 
-    public function testShouldValidateRequestForGetCollection()
+    public function testShouldValidateRequestForGetCollection(): void
     {
         $guerySchema = [
             'type' => 'object',
@@ -209,7 +210,7 @@ final class MessageValidatorTest extends TestCase
         $this->assertSame([], $messageValidator->getViolations());
     }
 
-    public function testShouldValidateRequestForGetCollectionWithNormalizer()
+    public function testShouldValidateRequestForGetCollectionWithNormalizer(): void
     {
         $guerySchema = [
             'type' => 'object',
@@ -279,7 +280,7 @@ final class MessageValidatorTest extends TestCase
         $this->assertSame([], $messageValidator->getViolations());
     }
 
-    public function testShouldValidateRequestForGetItem()
+    public function testShouldValidateRequestForGetItem(): void
     {
         $pathSchema = [
             'type' => 'object',
@@ -349,7 +350,7 @@ final class MessageValidatorTest extends TestCase
         $this->assertSame([], $messageValidator->getViolations());
     }
 
-    public function testShouldNotValidateRequestForCreateItemBecauseContentTypeIsNotEmpty()
+    public function testShouldNotValidateRequestForCreateItemBecauseContentTypeIsNotEmpty(): void
     {
         $request = $this->createMock(RequestInterface::class);
         $request->expects($this->never())->method('getUri');
@@ -404,7 +405,7 @@ final class MessageValidatorTest extends TestCase
         );
     }
 
-    public function testShouldNotValidateRequestForCreateItemBecauseContentTypeIsNotValidate()
+    public function testShouldNotValidateRequestForCreateItemBecauseContentTypeIsNotValidate(): void
     {
         $request = $this->createMock(RequestInterface::class);
         $request->expects($this->never())->method('getUri');
@@ -460,7 +461,7 @@ final class MessageValidatorTest extends TestCase
     }
 
     #[DataProvider('getWriteMethod')]
-    public function testShouldValidateRequestForCreateItem(string $method)
+    public function testShouldValidateRequestForCreateItem(string $method): void
     {
         $bodySchema = [
             'type' => 'object',
@@ -527,7 +528,7 @@ final class MessageValidatorTest extends TestCase
     }
 
     #[DataProvider('getWriteMethod')]
-    public function testShouldValidateRequestForCreateItemWithServerRequestInterface(string $method)
+    public function testShouldValidateRequestForCreateItemWithServerRequestInterface(string $method): void
     {
         $bodySchema = [
             'type' => 'object',
@@ -591,7 +592,7 @@ final class MessageValidatorTest extends TestCase
     }
 
     #[DataProvider('getWriteMethod')]
-    public function testShouldValidateRequestForCreateItemWithServerRequestInterfaceAndEmptyBody(string $method)
+    public function testShouldValidateRequestForCreateItemWithServerRequestInterfaceAndEmptyBody(string $method): void
     {
         $bodySchema = [
             'type' => 'object',
@@ -654,16 +655,7 @@ final class MessageValidatorTest extends TestCase
         $this->assertSame([], $messageValidator->getViolations());
     }
 
-    public static function getWriteMethod(): array
-    {
-        return [
-            ['POST'],
-            ['PUT'],
-            ['PATCH'],
-        ];
-    }
-
-    public function testShouldValidateResponseWhenDeleteItem()
+    public function testShouldValidateResponseWhenDeleteItem(): void
     {
         $headersSchema = [
             'type' => 'object',
@@ -730,7 +722,7 @@ final class MessageValidatorTest extends TestCase
         $this->assertSame([], $messageValidator->getViolations());
     }
 
-    public function testShouldNotValidateResponseBecauseContentTypeIsEmpty()
+    public function testShouldNotValidateResponseBecauseContentTypeIsEmpty(): void
     {
         $headersSchema = [
             'type' => 'object',
@@ -814,7 +806,7 @@ final class MessageValidatorTest extends TestCase
         );
     }
 
-    public function testShouldNotValidateResponseBecauseContentTypeIsNotValidate()
+    public function testShouldNotValidateResponseBecauseContentTypeIsNotValidate(): void
     {
         $headersSchema = [
             'type' => 'object',
@@ -896,6 +888,18 @@ final class MessageValidatorTest extends TestCase
             ],
             $violation->toArray()
         );
+    }
+
+    /**
+     * @return array<int, array<int, string>>
+     */
+    public static function getWriteMethod(): array
+    {
+        return [
+            ['POST'],
+            ['PUT'],
+            ['PATCH'],
+        ];
     }
 
     public function getValidator(): MessageValidator

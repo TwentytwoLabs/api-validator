@@ -22,6 +22,9 @@ abstract class AbstractSchemaFactory implements SchemaFactoryInterface
         return new Schema($this->createOperationDefinitions($this->resolveSchemaFile($schemaFile)));
     }
 
+    /**
+     * @return array<int|string, mixed>
+     */
     private function resolveSchemaFile(string $schemaFile): array
     {
         $extension = pathinfo($schemaFile, PATHINFO_EXTENSION);
@@ -29,10 +32,7 @@ abstract class AbstractSchemaFactory implements SchemaFactoryInterface
         $uriRetriever = match ($extension) {
             'yml', 'yaml' => new YamlUriRetriever(),
             'json' => new UriRetriever(),
-            default => throw new \InvalidArgumentException(sprintf(
-                'file "%s" does not provide a supported extension choose either json, yml or yaml',
-                $schemaFile
-            )),
+            default => throw new \InvalidArgumentException(sprintf('file "%s" does not provide a supported extension choose either json, yml or yaml', $schemaFile)),
         };
 
         $schemaStorage = new SchemaStorage($uriRetriever, new UriResolver());
@@ -56,6 +56,9 @@ abstract class AbstractSchemaFactory implements SchemaFactoryInterface
         }
     }
 
+    /**
+     * @param array<string, mixed> $parameter
+     */
     protected function createParameter(array $parameter): Parameter
     {
         $name = $parameter['name'];
@@ -72,5 +75,8 @@ abstract class AbstractSchemaFactory implements SchemaFactoryInterface
         return new Parameter($location, $name, $required, $schema);
     }
 
+    /**
+     * @param array<string, mixed> $schema
+     */
     abstract protected function createOperationDefinitions(array $schema): OperationDefinitions;
 }

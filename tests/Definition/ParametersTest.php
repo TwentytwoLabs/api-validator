@@ -10,7 +10,7 @@ use TwentytwoLabs\ApiValidator\Definition\Parameters;
 
 final class ParametersTest extends TestCase
 {
-    public function testShouldBuildParametersWithoutParameters()
+    public function testShouldBuildParametersWithoutParameters(): void
     {
         $parameters = new Parameters([]);
 
@@ -33,7 +33,7 @@ final class ParametersTest extends TestCase
         $this->assertNull($parameters->getByName('foo'));
     }
 
-    public function testShouldBuildParametersForCollectionOperation()
+    public function testShouldBuildParametersForCollectionOperation(): void
     {
         $parameterUid = new Parameter(location: 'header', name: 'x-uid', schema: ['type' => 'string']);
         $parameterContentType = new Parameter(location: 'header', name: 'content-type', required: true, schema: ['type' => 'string', 'default' => 'application/json', 'enum' => ['application/json']]);
@@ -97,7 +97,7 @@ final class ParametersTest extends TestCase
         $this->assertNull($parameters->getByName('enabled'));
     }
 
-    public function testShouldBuildParametersForCreationOperation()
+    public function testShouldBuildParametersForCreationOperation(): void
     {
         $parameterUid = new Parameter(location: 'header', name: 'x-uid', schema: ['type' => 'string']);
         $parameterContentType = new Parameter(location: 'header', name: 'content-type', required: true, schema: ['type' => 'string', 'default' => 'application/json', 'enum' => ['application/json']]);

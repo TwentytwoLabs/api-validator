@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace TwentytwoLabs\ApiValidator\Definition;
 
+/**
+ * @implements \IteratorAggregate<OperationDefinition>
+ */
 class OperationDefinitions implements \IteratorAggregate
 {
     /**
@@ -11,6 +14,9 @@ class OperationDefinitions implements \IteratorAggregate
      */
     private array $definitions = [];
 
+    /**
+     * @param OperationDefinition[] $requestDefinitions
+     */
     public function __construct(array $requestDefinitions = [])
     {
         foreach ($requestDefinitions as $requestDefinition) {
@@ -27,10 +33,7 @@ class OperationDefinitions implements \IteratorAggregate
             return $this->definitions[$operationId];
         }
 
-        throw new \InvalidArgumentException(sprintf(
-            'Unable to find request definition for operationId %s',
-            $operationId
-        ));
+        throw new \InvalidArgumentException(sprintf('Unable to find request definition for operationId %s', $operationId));
     }
 
     // IteratorAggregate

@@ -11,7 +11,7 @@ use TwentytwoLabs\ApiValidator\Validator\Exception\ConstraintViolations;
 
 final class ConstraintViolationsTest extends TestCase
 {
-    public function testShouldNotAddViolation()
+    public function testShouldNotAddViolation(): void
     {
         $exception = new ConstraintViolations([]);
 
@@ -19,7 +19,7 @@ final class ConstraintViolationsTest extends TestCase
         $this->assertSame("Request constraint violations:\n", $exception->__toString());
     }
 
-    public function testShouldAddViolation()
+    public function testShouldAddViolation(): void
     {
         /** @var ConstraintViolation|MockObject $violation */
         $violation = $this->createMock(ConstraintViolation::class);

@@ -12,7 +12,7 @@ use TwentytwoLabs\ApiValidator\Definition\ResponseDefinition;
 
 final class OperationDefinitionTest extends TestCase
 {
-    public function testShouldNotGetResponseDefinitionBecauseItIsNotFound()
+    public function testShouldNotGetResponseDefinitionBecauseItIsNotFound(): void
     {
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('No response definition for GET /features is available for status code 500');
@@ -105,7 +105,7 @@ final class OperationDefinitionTest extends TestCase
         $this->assertEmpty($requestDefinition->getBodySchema());
     }
 
-    public function testShouldGetResponseDefinition()
+    public function testShouldGetResponseDefinition(): void
     {
         $headersSchema = [
             'type' => 'object',
@@ -216,7 +216,7 @@ final class OperationDefinitionTest extends TestCase
         $this->assertEmpty($requestDefinition->getBodySchema());
     }
 
-    public function testShouldGetResponseDefinitionUsingDefaultResponse()
+    public function testShouldGetResponseDefinitionUsingDefaultResponse(): void
     {
         $headersSchema = [
             'type' => 'object',

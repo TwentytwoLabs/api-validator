@@ -25,11 +25,17 @@ class ResponseDefinition implements MessageDefinition
         return $this->parameters->hasHeadersSchema();
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function getHeadersSchema(): array
     {
         return $this->parameters->getHeadersSchema();
     }
 
+    /**
+     * @return array<int, string>
+     */
     public function getContentTypes(): array
     {
         return array_keys($this->getBodySchema());
@@ -40,6 +46,9 @@ class ResponseDefinition implements MessageDefinition
         return $this->parameters->hasBodySchema();
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function getBodySchema(): array
     {
         return $this->parameters->getBodySchema();

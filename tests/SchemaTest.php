@@ -11,7 +11,7 @@ use TwentytwoLabs\ApiValidator\Schema;
 
 final class SchemaTest extends TestCase
 {
-    public function testShouldGetOperationDefinitions()
+    public function testShouldGetOperationDefinitions(): void
     {
         $request = $this->createMock(OperationDefinition::class);
         $request->expects($this->once())->method('getOperationId')->willReturn('getPet');
@@ -25,7 +25,7 @@ final class SchemaTest extends TestCase
         $this->assertCount(1, iterator_to_array($operations->getIterator()));
     }
 
-    public function testShouldResolveAnOperationIdFromAPathTemplateAndMethod()
+    public function testShouldResolveAnOperationIdFromAPathTemplateAndMethod(): void
     {
         $operationDefinition = $this->createMock(OperationDefinition::class);
         $operationDefinition->expects($this->once())->method('getMethod')->willReturn('GET');
@@ -40,7 +40,7 @@ final class SchemaTest extends TestCase
         $this->assertSame($operationDefinition, $schema->getOperationDefinition(method: 'GET', path: '/api/pets/1234'));
     }
 
-    public function testShouldResolveAnOperationIdFromAPathAndMethod()
+    public function testShouldResolveAnOperationIdFromAPathAndMethod(): void
     {
         $operationDefinition = $this->createMock(OperationDefinition::class);
         $operationDefinition->expects($this->once())->method('getMethod')->willReturn('GET');
@@ -55,18 +55,18 @@ final class SchemaTest extends TestCase
         $this->assertSame($operationDefinition, $schema->getOperationDefinition(method: 'GET', path: '/api/pets'));
     }
 
-    public function testShouldThrowAnExceptionWhenNoOperationIdCanBeResolvedBecauseRequestStackIsEmpty()
+    public function testShouldThrowAnExceptionWhenNoOperationIdCanBeResolvedBecauseRequestStackIsEmpty(): void
     {
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Unable to resolve the operationId for path /api/pets/1234');
 
         $requests = new OperationDefinitions();
 
-        $schema = new Schema($requests, '/api');
+        $schema = new Schema($requests);
         $schema->getOperationDefinition(method: 'GET', path: '/api/pets/1234');
     }
 
-    public function testShouldThrowAnExceptionWhenNoOperationIdCanBeResolvedBecauseMethodNotMatching()
+    public function testShouldThrowAnExceptionWhenNoOperationIdCanBeResolvedBecauseMethodNotMatching(): void
     {
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Unable to resolve the operationId for path /api');
@@ -87,7 +87,7 @@ final class SchemaTest extends TestCase
         $schema->getOperationDefinition(method: 'GET', path: '/api');
     }
 
-    public function testShouldThrowAnExceptionWhenNoOperationIdCanBeResolvedBecausePathNotMatching()
+    public function testShouldThrowAnExceptionWhenNoOperationIdCanBeResolvedBecausePathNotMatching(): void
     {
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Unable to resolve the operationId for path /api');
@@ -108,27 +108,27 @@ final class SchemaTest extends TestCase
         $schema->getOperationDefinition(method: 'GET', path: '/api');
     }
 
-    public function testShouldProvideARequestDefinition()
+    public function testShouldProvideARequestDefinition(): void
     {
         $request = $this->createMock(OperationDefinition::class);
         $request->expects($this->once())->method('getOperationId')->willReturn('getPet');
 
         $requests = new OperationDefinitions([$request]);
 
-        $schema = new Schema($requests, '/api');
+        $schema = new Schema($requests);
         $actual = $schema->getOperationDefinition('getPet');
 
         $this->assertEquals($request, $actual);
     }
 
-    public function testShouldThrowAnExceptionWhenNoRequestDefinitionIsFound()
+    public function testShouldThrowAnExceptionWhenNoRequestDefinitionIsFound(): void
     {
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Unable to find request definition for operationId getPet');
 
         $requests = new OperationDefinitions();
 
-        $schema = new Schema($requests, '/api');
+        $schema = new Schema($requests);
         $schema->getOperationDefinition('getPet');
     }
 }

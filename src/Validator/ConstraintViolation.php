@@ -39,6 +39,9 @@ class ConstraintViolation
         return $this->location;
     }
 
+    /**
+     * @return array<string, string>
+     */
     public function toArray(): array
     {
         return [

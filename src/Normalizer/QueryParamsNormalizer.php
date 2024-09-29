@@ -10,10 +10,10 @@ namespace TwentytwoLabs\ApiValidator\Normalizer;
 final class QueryParamsNormalizer
 {
     /**
-     * @param array $queryParams       An array of query parameters
-     * @param array $queryParamsSchema A JSON Schema of query params
+     * @param array<string, mixed> $queryParams       An array of query parameters
+     * @param array<string, mixed> $queryParamsSchema A JSON Schema of query params
      *
-     * @return array An array of query parameters with the proper types
+     * @return array<string, mixed> An array of query parameters with the proper types
      */
     public static function normalize(array $queryParams, array $queryParamsSchema): array
     {
@@ -32,7 +32,7 @@ final class QueryParamsNormalizer
                         'ssv' => ' ',
                         'pipes' => '|',
                         'tsv' => "\t",
-                        default => throw new \InvalidArgumentException(sprintf('%s is not a supported query collection format', $queryParamSchema['collectionFormat']))
+                        default => throw new \InvalidArgumentException(sprintf('%s is not a supported query collection format', $queryParamSchema['collectionFormat'])),
                     };
 
                     $queryParams[$name] = explode($separator, $queryParams[$name]);

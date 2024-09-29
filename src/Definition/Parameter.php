@@ -11,8 +11,12 @@ final class Parameter
     private string $location;
     private string $name;
     private bool $required;
+    /** @var array<string, mixed> */
     private array $schema;
 
+    /**
+     * @param array<string, mixed> $schema
+     */
     public function __construct(string $location, string $name, bool $required = false, array $schema = [])
     {
         if (!\in_array($location, self::LOCATIONS, true)) {
@@ -40,6 +44,9 @@ final class Parameter
         return $this->required;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function getSchema(): array
     {
         return $this->schema;

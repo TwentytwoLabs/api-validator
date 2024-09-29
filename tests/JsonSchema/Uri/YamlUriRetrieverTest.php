@@ -9,7 +9,7 @@ use TwentytwoLabs\ApiValidator\JsonSchema\Uri\YamlUriRetriever;
 
 final class YamlUriRetrieverTest extends TestCase
 {
-    public function testItCanLoadAYamlFile()
+    public function testItCanLoadAYamlFile(): void
     {
         $retriever = new YamlUriRetriever();
         $object = $retriever->retrieve('file://'.__DIR__.'/../../Fixtures/v2/petstore.yaml');

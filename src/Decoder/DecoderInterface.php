@@ -6,5 +6,8 @@ namespace TwentytwoLabs\ApiValidator\Decoder;
 
 interface DecoderInterface
 {
-    public function decode(string $data, string $format);
+    /**
+     * @return array<int|string, mixed>
+     */
+    public function decode(string $data, string $format): array;
 }

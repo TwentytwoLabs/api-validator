@@ -5,21 +5,25 @@ declare(strict_types=1);
 namespace TwentytwoLabs\ApiValidator\Tests\Decoder\Adapter;
 
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Serializer\Encoder\DecoderInterface as SymfonyDecoderInterface;
 use TwentytwoLabs\ApiValidator\Decoder\Adapter\SymfonyDecoderAdapter;
 
 final class SymfonyDecoderAdapterTest extends TestCase
 {
-    private SymfonyDecoderInterface $decoder;
+    private SymfonyDecoderInterface|MockObject $decoder;
 
     protected function setUp(): void
     {
         $this->decoder = $this->createMock(SymfonyDecoderInterface::class);
     }
 
+    /**
+     * @param array<string, mixed> $context
+     */
     #[DataProvider('getData')]
-    public function testShouldDecodeJson(string $data, string $format, array $context)
+    public function testShouldDecodeJson(string $data, string $format, array $context): void
     {
         $this->decoder
             ->expects($this->once())
@@ -32,6 +36,9 @@ final class SymfonyDecoderAdapterTest extends TestCase
         $this->assertSame([['foo' => 'foo1'], ['foo' => 'foo2']], $decoder->decode($data, $format));
     }
 
+    /**
+     * @return array<int, array<int, string>>
+     */
     public static function getData(): array
     {
         return [

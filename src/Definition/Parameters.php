@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace TwentytwoLabs\ApiValidator\Definition;
 
+/**
+ * @implements \IteratorAggregate<Parameter>
+ */
 final class Parameters implements \IteratorAggregate
 {
     /**
@@ -11,6 +14,9 @@ final class Parameters implements \IteratorAggregate
      */
     private array $parameters = [];
 
+    /**
+     * @param Parameter[] $parameters
+     */
     public function __construct(array $parameters)
     {
         foreach ($parameters as $parameter) {
@@ -30,6 +36,9 @@ final class Parameters implements \IteratorAggregate
         return !empty($this->getHeadersSchema());
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function getHeadersSchema(): array
     {
         return $this->getSchema($this->getHeaders());
@@ -40,6 +49,9 @@ final class Parameters implements \IteratorAggregate
         return !empty($this->getPathSchema());
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function getPathSchema(): array
     {
         return $this->getSchema($this->getPath());
@@ -50,6 +62,9 @@ final class Parameters implements \IteratorAggregate
         return !empty($this->getQueryParametersSchema());
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function getQueryParametersSchema(): array
     {
         return $this->getSchema($this->getQuery());
@@ -65,6 +80,9 @@ final class Parameters implements \IteratorAggregate
         return $body->hasSchema();
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function getBodySchema(): array
     {
         $body = $this->getBody();
@@ -118,6 +136,8 @@ final class Parameters implements \IteratorAggregate
 
     /**
      * @param Parameter[] $parameters
+     *
+     * @return array<string, mixed>
      */
     private function getSchema(array $parameters): array
     {

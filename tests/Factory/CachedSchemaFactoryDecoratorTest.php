@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TwentytwoLabs\ApiValidator\Tests\Factory;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Cache\CacheItemInterface;
 use Psr\Cache\CacheItemPoolInterface;
@@ -13,8 +14,8 @@ use TwentytwoLabs\ApiValidator\Schema;
 
 final class CachedSchemaFactoryDecoratorTest extends TestCase
 {
-    private SchemaFactoryInterface $schemaFactory;
-    private CacheItemPoolInterface $cache;
+    private SchemaFactoryInterface|MockObject $schemaFactory;
+    private CacheItemPoolInterface|MockObject $cache;
 
     protected function setUp(): void
     {
@@ -22,7 +23,7 @@ final class CachedSchemaFactoryDecoratorTest extends TestCase
         $this->cache = $this->createMock(CacheItemPoolInterface::class);
     }
 
-    public function testShouldCreateSchema()
+    public function testShouldCreateSchema(): void
     {
         $schema = $this->createMock(Schema::class);
 
@@ -40,7 +41,7 @@ final class CachedSchemaFactoryDecoratorTest extends TestCase
         $factoryDecorator->createSchema('foo.yaml');
     }
 
-    public function testShouldNotCreateSchemaBecauseItIsCache()
+    public function testShouldNotCreateSchemaBecauseItIsCache(): void
     {
         $schema = $this->createMock(Schema::class);
 

@@ -10,7 +10,7 @@ use TwentytwoLabs\ApiValidator\Normalizer\QueryParamsNormalizer;
 
 final class QueryParamsNormalizerTest extends TestCase
 {
-    public function testShouldNormalizeQueryParametersWhenThereAreNoParams()
+    public function testShouldNormalizeQueryParametersWhenThereAreNoParams(): void
     {
         $jsonSchema = [
             'type' => 'object',
@@ -23,8 +23,11 @@ final class QueryParamsNormalizerTest extends TestCase
     }
 
     #[DataProvider('getValidQueryParameters')]
-    public function testShouldNormalizeQueryParameters($schemaType, $actualValue, $expectedValue)
-    {
+    public function testShouldNormalizeQueryParameters(
+        string $schemaType,
+        int|string $actualValue,
+        mixed $expectedValue,
+    ): void {
         $jsonSchema = [
             'type' => 'object',
             'properties' => [
@@ -43,6 +46,53 @@ final class QueryParamsNormalizerTest extends TestCase
         $this->assertSame($expectedValue, $normalizedValue['foo']);
     }
 
+    /**
+     * @param array<int, string> $expectedValue
+     */
+    #[DataProvider('getValidCollectionFormat')]
+    public function testShouldTransformCollectionFormatIntoArray(
+        string $collectionFormat,
+        string $rawValue,
+        array $expectedValue,
+    ): void {
+        $jsonSchema = [
+            'type' => 'object',
+            'properties' => [
+                'param' => [
+                    'type' => 'array',
+                    'items' => ['string'],
+                    'collectionFormat' => $collectionFormat,
+                ],
+            ],
+        ];
+
+        $normalizedValue = QueryParamsNormalizer::normalize(['param' => $rawValue], $jsonSchema);
+
+        $this->assertSame($expectedValue, $normalizedValue['param']);
+    }
+
+    public function testShouldThrowAnExceptionOnUnsupportedCollectionFormat(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('unknown is not a supported query collection format');
+
+        $jsonSchema = [
+            'type' => 'object',
+            'properties' => [
+                'param' => [
+                    'type' => 'array',
+                    'items' => ['string'],
+                    'collectionFormat' => 'unknown',
+                ],
+            ],
+        ];
+
+        QueryParamsNormalizer::normalize(['param' => 'foo%bar'], $jsonSchema);
+    }
+
+    /**
+     * @return array<string, array<int, mixed>>
+     */
     public static function getValidQueryParameters(): array
     {
         return [
@@ -60,25 +110,9 @@ final class QueryParamsNormalizerTest extends TestCase
         ];
     }
 
-    #[DataProvider('getValidCollectionFormat')]
-    public function testShouldTransformCollectionFormatIntoArray($collectionFormat, $rawValue, array $expectedValue)
-    {
-        $jsonSchema = [
-            'type' => 'object',
-            'properties' => [
-                'param' => [
-                    'type' => 'array',
-                    'items' => ['string'],
-                    'collectionFormat' => $collectionFormat,
-                ],
-            ],
-        ];
-
-        $normalizedValue = QueryParamsNormalizer::normalize(['param' => $rawValue], $jsonSchema);
-
-        $this->assertSame($expectedValue, $normalizedValue['param']);
-    }
-
+    /**
+     * @return array<string, array<int, mixed>>
+     */
     public static function getValidCollectionFormat(): array
     {
         return [
@@ -87,24 +121,5 @@ final class QueryParamsNormalizerTest extends TestCase
             'with pipes' => ['pipes', 'foo|bar|baz', ['foo', 'bar', 'baz']],
             'with tabs' => ['tsv', "foo\tbar\tbaz", ['foo', 'bar', 'baz']],
         ];
-    }
-
-    public function testShouldThrowAnExceptionOnUnsupportedCollectionFormat()
-    {
-        $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('unknown is not a supported query collection format');
-
-        $jsonSchema = [
-            'type' => 'object',
-            'properties' => [
-                'param' => [
-                    'type' => 'array',
-                    'items' => ['string'],
-                    'collectionFormat' => 'unknown',
-                ],
-            ],
-        ];
-
-        QueryParamsNormalizer::normalize(['param' => 'foo%bar'], $jsonSchema);
     }
 }

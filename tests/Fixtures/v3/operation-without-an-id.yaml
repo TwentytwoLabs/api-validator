@@ -34,6 +34,25 @@ paths:
                      style: simple
                      explode: false
                      allowReserved: false
+                  x-foo:
+                     description: ''
+                     required: true
+                     deprecated: false
+                     allowEmptyValue: false
+                     schema:
+                        type: string
+                     style: simple
+                     explode: false
+                     allowReserved: false
+                  x-bar:
+                     description: ''
+                     deprecated: false
+                     allowEmptyValue: false
+                     schema:
+                        type: string
+                     style: simple
+                     explode: false
+                     allowReserved: false
             400:
                headers:
                   x-version:
@@ -166,6 +185,18 @@ paths:
                in: header
                description: ''
                required: false
+               deprecated: false
+               allowEmptyValue: false
+               schema:
+                  type: string
+               style: simple
+               explode: false
+               allowReserved: false
+            -
+               name: x-foo
+               in: header
+               description: ''
+               required: true
                deprecated: false
                allowEmptyValue: false
                schema:

@@ -12,10 +12,13 @@ interface MessageDefinition
     public function hasHeadersSchema(): bool;
 
     /**
-     * Get the schema for the headers.
+     * @return array<string, mixed>
      */
     public function getHeadersSchema(): array;
 
+    /**
+     * @return array<int, string>
+     */
     public function getContentTypes(): array;
 
     /**
@@ -24,7 +27,7 @@ interface MessageDefinition
     public function hasBodySchema(): bool;
 
     /**
-     * Get the schema for the body.
+     * @return array<string, mixed>
      */
     public function getBodySchema(): array;
 }
