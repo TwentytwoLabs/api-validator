@@ -9,5 +9,5 @@ interface DecoderInterface
     /**
      * @return array<int|string, mixed>
      */
-    public function decode(string $data, string $format): array;
+    public function decode(string $data, string $format): \stdClass|array;
 }
