@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace TwentytwoLabs\ApiValidator\Tests\Validator\Exception;
 
-use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use TwentytwoLabs\ApiValidator\Validator\ConstraintViolation;
 use TwentytwoLabs\ApiValidator\Validator\Exception\ConstraintViolations;
@@ -21,7 +20,6 @@ final class ConstraintViolationsTest extends TestCase
 
     public function testShouldAddViolation(): void
     {
-        /** @var ConstraintViolation|MockObject $violation */
         $violation = $this->createMock(ConstraintViolation::class);
         $violation->expects($this->exactly(2))->method('getLocation')->willReturn('header');
         $violation->expects($this->exactly(2))->method('getMessage')->willReturn('foo is required');

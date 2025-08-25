@@ -12,12 +12,12 @@ final class YamlUriRetrieverTest extends TestCase
     public function testItCanLoadAYamlFile(): void
     {
         $retriever = new YamlUriRetriever();
-        $object = $retriever->retrieve('file://'.__DIR__.'/../../Fixtures/v2/petstore.yaml');
+        $object = $retriever->retrieve(sprintf('file://%s/../../Fixtures/v2/petstore.yaml', __DIR__));
 
-        $this->assertTrue(is_object($object));
+        $this->assertInstanceOf(\stdClass::class, $object);
 
-        $object = $retriever->retrieve('file://'.__DIR__.'/../../Fixtures/v2/petstore.yaml');
+        $object = $retriever->retrieve(sprintf('file://%s/../../Fixtures/v2/petstore.yaml', __DIR__));
 
-        $this->assertTrue(is_object($object));
+        $this->assertInstanceOf(\stdClass::class, $object);
     }
 }

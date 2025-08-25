@@ -169,7 +169,7 @@ class MessageValidator
      */
     private function validate(mixed $data, array $schema, string $location): void
     {
-        $this->validator->check($data, json_decode(json_encode($schema)));
+        $this->validator->validate($data, json_decode(json_encode($schema)));
         if (!$this->validator->isValid()) {
             $violations = array_map(
                 function (array $error) use ($location) {

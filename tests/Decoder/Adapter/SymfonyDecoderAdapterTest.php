@@ -37,7 +37,7 @@ final class SymfonyDecoderAdapterTest extends TestCase
     }
 
     /**
-     * @return array<int, array<int, string>>
+     * @return array<int, array<int, mixed>>
      */
     public static function getData(): array
     {

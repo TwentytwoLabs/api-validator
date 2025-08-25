@@ -72,35 +72,42 @@ final class MessageValidatorTest extends TestCase
 
         $this->decoder->expects($this->never())->method('decode');
 
-        $this->validator->expects($this->once())->method('check')->willReturnCallback(function ($value, $schema) {
-            $this->assertInstanceOf(\stdClass::class, $value);
-            $this->assertInstanceOf(\stdClass::class, $schema);
+        $this->validator
+            ->expects($this->once())
+            ->method('validate')
+            ->willReturnCallback(function (\stdClass $value, \stdClass $schema) {
+                $value = json_decode(json_encode($value), true);
+                $schema = json_decode(json_encode($schema), true);
 
-            $value = json_decode(json_encode($value), true);
-            $schema = json_decode(json_encode($schema), true);
-
-            $this->assertSame(
-                [
-                    'content-type' => 'application/ld+json',
-                    'x-uid' => '114e010',
-                    'cache-control' => 'no-cache, no-store, must-revalidate',
-                ],
-                $value
-            );
-
-            $this->assertSame(
-                [
-                    'type' => 'object',
-                    'required' => ['content-type'],
-                    'properties' => [
-                        'x-uid' => ['type' => 'string'],
-                        'type' => ['type' => 'string', 'default' => 'application/json', 'enum' => ['application/json']],
-                        'cache-control' => ['type' => 'string'],
+                $this->assertSame(
+                    [
+                        'content-type' => 'application/ld+json',
+                        'x-uid' => '114e010',
+                        'cache-control' => 'no-cache, no-store, must-revalidate',
                     ],
-                ],
-                $schema
-            );
-        });
+                    $value
+                );
+
+                $this->assertSame(
+                    [
+                        'type' => 'object',
+                        'required' => ['content-type'],
+                        'properties' => [
+                            'x-uid' => ['type' => 'string'],
+                            'type' => [
+                                'type' => 'string',
+                                'default' => 'application/json',
+                                'enum' => ['application/json'],
+                            ],
+                            'cache-control' => ['type' => 'string'],
+                        ],
+                    ],
+                    $schema
+                );
+
+                return 1;
+            })
+        ;
         $this->validator->expects($this->once())->method('isValid')->willReturn(false);
         $this->validator->expects($this->once())->method('reset');
         $this->validator->expects($this->once())->method('getErrors')->willReturn([
@@ -118,7 +125,6 @@ final class MessageValidatorTest extends TestCase
         $messageValidator->validateRequest($request, $requestDefinition);
         $this->assertTrue($messageValidator->hasViolations());
         $violations = $messageValidator->getViolations();
-        $this->assertIsArray($violations);
         $this->assertCount(1, $violations);
         $violation = $violations[0];
         $this->assertInstanceOf(ConstraintViolation::class, $violation);
@@ -179,27 +185,30 @@ final class MessageValidatorTest extends TestCase
 
         $this->decoder->expects($this->never())->method('decode');
 
-        $this->validator->expects($this->once())->method('check')->willReturnCallback(function ($value, $schema) {
-            $this->assertInstanceOf(\stdClass::class, $value);
-            $this->assertInstanceOf(\stdClass::class, $schema);
+        $this->validator
+            ->expects($this->once())
+            ->method('validate')
+            ->willReturnCallback(function (\stdClass $value, \stdClass $schema) {
+                $value = json_decode(json_encode($value), true);
+                $schema = json_decode(json_encode($schema), true);
 
-            $value = json_decode(json_encode($value), true);
-            $schema = json_decode(json_encode($schema), true);
-
-            $this->assertSame(['page' => 1, 'itemsPerPage' => 10], $value);
-            $this->assertSame(
-                [
-                    'type' => 'object',
-                    'required' => [],
-                    'properties' => [
-                        'force' => ['type' => 'boolean', 'default' => false],
-                        'page' => ['type' => 'integer', 'default' => 1],
-                        'itemsPerPage' => ['type' => 'integer', 'default' => 30, 'minimum' => 0],
+                $this->assertSame(['page' => 1, 'itemsPerPage' => 10], $value);
+                $this->assertSame(
+                    [
+                        'type' => 'object',
+                        'required' => [],
+                        'properties' => [
+                            'force' => ['type' => 'boolean', 'default' => false],
+                            'page' => ['type' => 'integer', 'default' => 1],
+                            'itemsPerPage' => ['type' => 'integer', 'default' => 30, 'minimum' => 0],
+                        ],
                     ],
-                ],
-                $schema
-            );
-        });
+                    $schema
+                );
+
+                return 0;
+            })
+        ;
         $this->validator->expects($this->once())->method('isValid')->willReturn(true);
         $this->validator->expects($this->never())->method('getErrors');
         $this->validator->expects($this->once())->method('reset');
@@ -252,24 +261,27 @@ final class MessageValidatorTest extends TestCase
 
         $this->decoder->expects($this->never())->method('decode');
 
-        $this->validator->expects($this->once())->method('check')->willReturnCallback(function ($value, $schema) {
-            $this->assertInstanceOf(\stdClass::class, $value);
-            $this->assertInstanceOf(\stdClass::class, $schema);
-
-            $this->assertSame(['page' => 1, 'itemsPerPage' => 10], json_decode(json_encode($value), true));
-            $this->assertSame(
-                [
-                    'type' => 'object',
-                    'required' => [],
-                    'properties' => [
-                        'force' => ['type' => 'boolean', 'default' => false],
-                        'page' => ['type' => 'integer', 'default' => 1],
-                        'itemsPerPage' => ['type' => 'integer', 'default' => 30, 'minimum' => 0],
+        $this->validator
+            ->expects($this->once())
+            ->method('validate')
+            ->willReturnCallback(function (\stdClass $value, \stdClass $schema) {
+                $this->assertSame(['page' => 1, 'itemsPerPage' => 10], json_decode(json_encode($value), true));
+                $this->assertSame(
+                    [
+                        'type' => 'object',
+                        'required' => [],
+                        'properties' => [
+                            'force' => ['type' => 'boolean', 'default' => false],
+                            'page' => ['type' => 'integer', 'default' => 1],
+                            'itemsPerPage' => ['type' => 'integer', 'default' => 30, 'minimum' => 0],
+                        ],
                     ],
-                ],
-                json_decode(json_encode($schema), true)
-            );
-        });
+                    json_decode(json_encode($schema), true)
+                );
+
+                return 0;
+            })
+        ;
         $this->validator->expects($this->once())->method('isValid')->willReturn(true);
         $this->validator->expects($this->never())->method('getErrors');
         $this->validator->expects($this->once())->method('reset');
@@ -321,25 +333,28 @@ final class MessageValidatorTest extends TestCase
 
         $this->decoder->expects($this->never())->method('decode');
 
-        $this->validator->expects($this->once())->method('check')->willReturnCallback(function ($value, $schema) {
-            $this->assertInstanceOf(\stdClass::class, $value);
-            $this->assertInstanceOf(\stdClass::class, $schema);
+        $this->validator
+            ->expects($this->once())
+            ->method('validate')
+            ->willReturnCallback(function (\stdClass $value, \stdClass $schema) {
+                $value = json_decode(json_encode($value), true);
+                $schema = json_decode(json_encode($schema), true);
 
-            $value = json_decode(json_encode($value), true);
-            $schema = json_decode(json_encode($schema), true);
-
-            $this->assertSame(['id' => '1'], $value);
-            $this->assertSame(
-                [
-                    'type' => 'object',
-                    'required' => ['id'],
-                    'properties' => [
-                        'id' => ['type' => 'string'],
+                $this->assertSame(['id' => '1'], $value);
+                $this->assertSame(
+                    [
+                        'type' => 'object',
+                        'required' => ['id'],
+                        'properties' => [
+                            'id' => ['type' => 'string'],
+                        ],
                     ],
-                ],
-                $schema
-            );
-        });
+                    $schema
+                );
+
+                return 0;
+            })
+        ;
         $this->validator->expects($this->once())->method('isValid')->willReturn(true);
         $this->validator->expects($this->never())->method('getErrors');
         $this->validator->expects($this->once())->method('reset');
@@ -377,7 +392,7 @@ final class MessageValidatorTest extends TestCase
 
         $this->decoder->expects($this->never())->method('decode');
 
-        $this->validator->expects($this->never())->method('check');
+        $this->validator->expects($this->never())->method('validate');
         $this->validator->expects($this->never())->method('isValid');
         $this->validator->expects($this->never())->method('getErrors');
         $this->validator->expects($this->never())->method('reset');
@@ -386,7 +401,6 @@ final class MessageValidatorTest extends TestCase
         $messageValidator->validateRequest($request, $requestDefinition);
         $this->assertTrue($messageValidator->hasViolations());
         $violations = $messageValidator->getViolations();
-        $this->assertIsArray($violations);
         $this->assertCount(1, $violations);
         $violation = $violations[0];
         $this->assertInstanceOf(ConstraintViolation::class, $violation);
@@ -410,7 +424,12 @@ final class MessageValidatorTest extends TestCase
         $request = $this->createMock(RequestInterface::class);
         $request->expects($this->never())->method('getUri');
         $request->expects($this->never())->method('getHeaders');
-        $request->expects($this->exactly(3))->method('getHeaderLine')->with('Content-Type')->willReturn('application/ld+json; charset=utf8');
+        $request
+            ->expects($this->exactly(3))
+            ->method('getHeaderLine')
+            ->with('Content-Type')
+            ->willReturn('application/ld+json; charset=utf8')
+        ;
         $request->expects($this->never())->method('getMethod');
         $request->expects($this->never())->method('getBody');
 
@@ -432,7 +451,7 @@ final class MessageValidatorTest extends TestCase
 
         $this->decoder->expects($this->never())->method('decode');
 
-        $this->validator->expects($this->never())->method('check');
+        $this->validator->expects($this->never())->method('validate');
         $this->validator->expects($this->never())->method('isValid');
         $this->validator->expects($this->never())->method('getErrors');
         $this->validator->expects($this->never())->method('reset');
@@ -441,12 +460,14 @@ final class MessageValidatorTest extends TestCase
         $messageValidator->validateRequest($request, $requestDefinition);
         $this->assertTrue($messageValidator->hasViolations());
         $violations = $messageValidator->getViolations();
-        $this->assertIsArray($violations);
         $this->assertCount(1, $violations);
         $violation = $violations[0];
         $this->assertInstanceOf(ConstraintViolation::class, $violation);
         $this->assertSame('Content-Type', $violation->getProperty());
-        $this->assertSame('application/ld+json; charset=utf8 is not a supported content type, supported: application/json', $violation->getMessage());
+        $this->assertSame(
+            'application/ld+json; charset=utf8 is not a supported content type, supported: application/json',
+            $violation->getMessage()
+        );
         $this->assertSame('enum', $violation->getConstraint());
         $this->assertSame('header', $violation->getLocation());
         $this->assertSame(
@@ -477,7 +498,12 @@ final class MessageValidatorTest extends TestCase
         $request = $this->createMock(RequestInterface::class);
         $request->expects($this->never())->method('getUri');
         $request->expects($this->never())->method('getHeaders');
-        $request->expects($this->exactly(3))->method('getHeaderLine')->with('Content-Type')->willReturn('application/json; charset=utf8');
+        $request
+            ->expects($this->exactly(3))
+            ->method('getHeaderLine')
+            ->with('Content-Type')
+            ->willReturn('application/json; charset=utf8')
+        ;
         $request->expects($this->once())->method('getMethod')->willReturn($method);
         $request->expects($this->once())->method('getBody')->willReturn($stream);
 
@@ -497,26 +523,34 @@ final class MessageValidatorTest extends TestCase
         $requestDefinition->expects($this->exactly(2))->method('hasBodySchema')->willReturn(true);
         $requestDefinition->expects($this->once())->method('getBodySchema')->willReturn($bodySchema);
 
-        $this->decoder->expects($this->once())->method('decode')->with('{"name":"foo"}', 'json')->willReturn(['name' => 'foo']);
+        $this->decoder
+            ->expects($this->once())
+            ->method('decode')
+            ->with('{"name":"foo"}', 'json')
+            ->willReturn(['name' => 'foo'])
+        ;
 
-        $this->validator->expects($this->once())->method('check')->willReturnCallback(function ($value, $schema) {
-            $this->assertIsArray($value);
-            $this->assertInstanceOf(\stdClass::class, $schema);
+        $this->validator
+            ->expects($this->once())
+            ->method('validate')
+            ->willReturnCallback(function (array $value, \stdClass $schema) {
+                $schema = json_decode(json_encode($schema), true);
 
-            $schema = json_decode(json_encode($schema), true);
-
-            $this->assertSame(['name' => 'foo'], $value);
-            $this->assertSame(
-                [
-                    'type' => 'object',
-                    'required' => ['name'],
-                    'properties' => [
-                        'name' => ['type' => 'string'],
+                $this->assertSame(['name' => 'foo'], $value);
+                $this->assertSame(
+                    [
+                        'type' => 'object',
+                        'required' => ['name'],
+                        'properties' => [
+                            'name' => ['type' => 'string'],
+                        ],
                     ],
-                ],
-                $schema
-            );
-        });
+                    $schema
+                );
+
+                return 0;
+            })
+        ;
         $this->validator->expects($this->once())->method('isValid')->willReturn(true);
         $this->validator->expects($this->never())->method('getErrors');
         $this->validator->expects($this->once())->method('reset');
@@ -541,7 +575,12 @@ final class MessageValidatorTest extends TestCase
         $request = $this->createMock(ServerRequestInterface::class);
         $request->expects($this->never())->method('getUri');
         $request->expects($this->never())->method('getHeaders');
-        $request->expects($this->exactly(3))->method('getHeaderLine')->with('Content-Type')->willReturn('application/json; charset=utf8');
+        $request
+            ->expects($this->exactly(3))
+            ->method('getHeaderLine')
+            ->with('Content-Type')
+            ->willReturn('application/json; charset=utf8')
+        ;
         $request->expects($this->once())->method('getMethod')->willReturn($method);
         $request->expects($this->once())->method('getParsedBody')->willReturn(['name' => 'foo']);
 
@@ -561,26 +600,34 @@ final class MessageValidatorTest extends TestCase
         $requestDefinition->expects($this->exactly(2))->method('hasBodySchema')->willReturn(true);
         $requestDefinition->expects($this->once())->method('getBodySchema')->willReturn($bodySchema);
 
-        $this->decoder->expects($this->once())->method('decode')->with('{"name":"foo"}', 'json')->willReturn(['name' => 'foo']);
+        $this->decoder
+            ->expects($this->once())
+            ->method('decode')
+            ->with('{"name":"foo"}', 'json')
+            ->willReturn(['name' => 'foo'])
+        ;
 
-        $this->validator->expects($this->once())->method('check')->willReturnCallback(function ($value, $schema) {
-            $this->assertIsArray($value);
-            $this->assertInstanceOf(\stdClass::class, $schema);
+        $this->validator
+            ->expects($this->once())
+            ->method('validate')
+            ->willReturnCallback(function (array $value, \stdClass $schema) {
+                $schema = json_decode(json_encode($schema), true);
 
-            $schema = json_decode(json_encode($schema), true);
-
-            $this->assertSame(['name' => 'foo'], $value);
-            $this->assertSame(
-                [
-                    'type' => 'object',
-                    'required' => ['name'],
-                    'properties' => [
-                        'name' => ['type' => 'string'],
+                $this->assertSame(['name' => 'foo'], $value);
+                $this->assertSame(
+                    [
+                        'type' => 'object',
+                        'required' => ['name'],
+                        'properties' => [
+                            'name' => ['type' => 'string'],
+                        ],
                     ],
-                ],
-                $schema
-            );
-        });
+                    $schema
+                );
+
+                return 0;
+            })
+        ;
         $this->validator->expects($this->once())->method('isValid')->willReturn(true);
         $this->validator->expects($this->never())->method('getErrors');
         $this->validator->expects($this->once())->method('reset');
@@ -605,7 +652,12 @@ final class MessageValidatorTest extends TestCase
         $request = $this->createMock(ServerRequestInterface::class);
         $request->expects($this->never())->method('getUri');
         $request->expects($this->never())->method('getHeaders');
-        $request->expects($this->exactly(3))->method('getHeaderLine')->with('Content-Type')->willReturn('application/json; charset=utf8');
+        $request
+            ->expects($this->exactly(3))
+            ->method('getHeaderLine')
+            ->with('Content-Type')
+            ->willReturn('application/json; charset=utf8')
+        ;
         $request->expects($this->once())->method('getMethod')->willReturn($method);
         $request->expects($this->once())->method('getParsedBody')->willReturn([]);
 
@@ -627,24 +679,27 @@ final class MessageValidatorTest extends TestCase
 
         $this->decoder->expects($this->once())->method('decode')->with('', 'json')->willReturn([]);
 
-        $this->validator->expects($this->once())->method('check')->willReturnCallback(function ($value, $schema) {
-            $this->assertIsArray($value);
-            $this->assertInstanceOf(\stdClass::class, $schema);
+        $this->validator
+            ->expects($this->once())
+            ->method('validate')
+            ->willReturnCallback(function (array $value, \stdClass $schema) {
+                $schema = json_decode(json_encode($schema), true);
 
-            $schema = json_decode(json_encode($schema), true);
-
-            $this->assertSame([], $value);
-            $this->assertSame(
-                [
-                    'type' => 'object',
-                    'required' => ['name'],
-                    'properties' => [
-                        'name' => ['type' => 'string'],
+                $this->assertSame([], $value);
+                $this->assertSame(
+                    [
+                        'type' => 'object',
+                        'required' => ['name'],
+                        'properties' => [
+                            'name' => ['type' => 'string'],
+                        ],
                     ],
-                ],
-                $schema
-            );
-        });
+                    $schema
+                );
+
+                return 0;
+            })
+        ;
         $this->validator->expects($this->once())->method('isValid')->willReturn(true);
         $this->validator->expects($this->never())->method('getErrors');
         $this->validator->expects($this->once())->method('reset');
@@ -686,32 +741,44 @@ final class MessageValidatorTest extends TestCase
         $responseDefinition->expects($this->once())->method('hasBodySchema')->willReturn(false);
 
         $definition = $this->createMock(OperationDefinition::class);
-        $definition->expects($this->once())->method('getResponseDefinition')->with(204)->willReturn($responseDefinition);
+        $definition
+            ->expects($this->once())
+            ->method('getResponseDefinition')
+            ->with(204)
+            ->willReturn($responseDefinition)
+        ;
 
         $this->decoder->expects($this->never())->method('decode');
 
-        $this->validator->expects($this->once())->method('check')->willReturnCallback(function ($value, $schema) {
-            $this->assertInstanceOf(\stdClass::class, $value);
-            $this->assertInstanceOf(\stdClass::class, $schema);
+        $this->validator
+            ->expects($this->once())
+            ->method('validate')
+            ->willReturnCallback(function (\stdClass $value, \stdClass $schema) {
+                $value = json_decode(json_encode($value), true);
+                $schema = json_decode(json_encode($schema), true);
 
-            $value = json_decode(json_encode($value), true);
-            $schema = json_decode(json_encode($schema), true);
+                $this->assertSame(['content-type' => 'application/json', 'x-uid' => 'b6778b4'], $value);
 
-            $this->assertSame(['content-type' => 'application/json', 'x-uid' => 'b6778b4'], $value);
-
-            $this->assertSame(
-                [
-                    'type' => 'object',
-                    'required' => ['content-type'],
-                    'properties' => [
-                        'x-uid' => ['type' => 'string'],
-                        'type' => ['type' => 'string', 'default' => 'application/json', 'enum' => ['application/json']],
-                        'cache-control' => ['type' => 'string'],
+                $this->assertSame(
+                    [
+                        'type' => 'object',
+                        'required' => ['content-type'],
+                        'properties' => [
+                            'x-uid' => ['type' => 'string'],
+                            'type' => [
+                                'type' => 'string',
+                                'default' => 'application/json',
+                                'enum' => ['application/json'],
+                            ],
+                            'cache-control' => ['type' => 'string'],
+                        ],
                     ],
-                ],
-                $schema
-            );
-        });
+                    $schema
+                );
+
+                return 0;
+            })
+        ;
         $this->validator->expects($this->once())->method('isValid')->willReturn(true);
         $this->validator->expects($this->never())->method('getErrors');
         $this->validator->expects($this->once())->method('reset');
@@ -753,32 +820,44 @@ final class MessageValidatorTest extends TestCase
         $responseDefinition->expects($this->never())->method('hasBodySchema');
 
         $definition = $this->createMock(OperationDefinition::class);
-        $definition->expects($this->once())->method('getResponseDefinition')->with(200)->willReturn($responseDefinition);
+        $definition
+            ->expects($this->once())
+            ->method('getResponseDefinition')
+            ->with(200)
+            ->willReturn($responseDefinition)
+        ;
 
         $this->decoder->expects($this->never())->method('decode');
 
-        $this->validator->expects($this->once())->method('check')->willReturnCallback(function ($value, $schema) {
-            $this->assertInstanceOf(\stdClass::class, $value);
-            $this->assertInstanceOf(\stdClass::class, $schema);
+        $this->validator
+            ->expects($this->once())
+            ->method('validate')
+            ->willReturnCallback(function (\stdClass $value, \stdClass $schema) {
+                $value = json_decode(json_encode($value), true);
+                $schema = json_decode(json_encode($schema), true);
 
-            $value = json_decode(json_encode($value), true);
-            $schema = json_decode(json_encode($schema), true);
+                $this->assertSame(['content-type' => 'application/json', 'x-uid' => 'b6778b4'], $value);
 
-            $this->assertSame(['content-type' => 'application/json', 'x-uid' => 'b6778b4'], $value);
-
-            $this->assertSame(
-                [
-                    'type' => 'object',
-                    'required' => ['content-type'],
-                    'properties' => [
-                        'x-uid' => ['type' => 'string'],
-                        'type' => ['type' => 'string', 'default' => 'application/json', 'enum' => ['application/json']],
-                        'cache-control' => ['type' => 'string'],
+                $this->assertSame(
+                    [
+                        'type' => 'object',
+                        'required' => ['content-type'],
+                        'properties' => [
+                            'x-uid' => ['type' => 'string'],
+                            'type' => [
+                                'type' => 'string',
+                                'default' => 'application/json',
+                                'enum' => ['application/json'],
+                            ],
+                            'cache-control' => ['type' => 'string'],
+                        ],
                     ],
-                ],
-                $schema
-            );
-        });
+                    $schema
+                );
+
+                return 0;
+            })
+        ;
         $this->validator->expects($this->once())->method('isValid')->willReturn(true);
         $this->validator->expects($this->never())->method('getErrors');
         $this->validator->expects($this->once())->method('reset');
@@ -787,7 +866,6 @@ final class MessageValidatorTest extends TestCase
         $messageValidator->validateResponse($response, $definition);
         $this->assertTrue($messageValidator->hasViolations());
         $violations = $messageValidator->getViolations();
-        $this->assertIsArray($violations);
         $this->assertCount(1, $violations);
         $violation = $violations[0];
         $this->assertInstanceOf(ConstraintViolation::class, $violation);
@@ -825,7 +903,11 @@ final class MessageValidatorTest extends TestCase
         $response = $this->createMock(ResponseInterface::class);
         $response->expects($this->once())->method('getStatusCode')->willReturn(200);
         $response->expects($this->once())->method('getHeaders')->willReturn($headers);
-        $response->expects($this->exactly(3))->method('getHeaderLine')->willReturn('application/hal+json; charset=utf8');
+        $response
+            ->expects($this->exactly(3))
+            ->method('getHeaderLine')
+            ->willReturn('application/hal+json; charset=utf8')
+        ;
         $response->expects($this->never())->method('getBody');
 
         $responseDefinition = $this->createMock(ResponseDefinition::class);
@@ -837,32 +919,44 @@ final class MessageValidatorTest extends TestCase
         $responseDefinition->expects($this->never())->method('hasBodySchema');
 
         $definition = $this->createMock(OperationDefinition::class);
-        $definition->expects($this->once())->method('getResponseDefinition')->with(200)->willReturn($responseDefinition);
+        $definition
+            ->expects($this->once())
+            ->method('getResponseDefinition')
+            ->with(200)
+            ->willReturn($responseDefinition)
+        ;
 
         $this->decoder->expects($this->never())->method('decode');
 
-        $this->validator->expects($this->once())->method('check')->willReturnCallback(function ($value, $schema) {
-            $this->assertInstanceOf(\stdClass::class, $value);
-            $this->assertInstanceOf(\stdClass::class, $schema);
+        $this->validator
+            ->expects($this->once())
+            ->method('validate')
+            ->willReturnCallback(function (\stdClass $value, \stdClass $schema) {
+                $value = json_decode(json_encode($value), true);
+                $schema = json_decode(json_encode($schema), true);
 
-            $value = json_decode(json_encode($value), true);
-            $schema = json_decode(json_encode($schema), true);
+                $this->assertSame(['content-type' => 'application/json', 'x-uid' => 'b6778b4'], $value);
 
-            $this->assertSame(['content-type' => 'application/json', 'x-uid' => 'b6778b4'], $value);
-
-            $this->assertSame(
-                [
-                    'type' => 'object',
-                    'required' => ['content-type'],
-                    'properties' => [
-                        'x-uid' => ['type' => 'string'],
-                        'type' => ['type' => 'string', 'default' => 'application/json', 'enum' => ['application/json']],
-                        'cache-control' => ['type' => 'string'],
+                $this->assertSame(
+                    [
+                        'type' => 'object',
+                        'required' => ['content-type'],
+                        'properties' => [
+                            'x-uid' => ['type' => 'string'],
+                            'type' => [
+                                'type' => 'string',
+                                'default' => 'application/json',
+                                'enum' => ['application/json'],
+                            ],
+                            'cache-control' => ['type' => 'string'],
+                        ],
                     ],
-                ],
-                $schema
-            );
-        });
+                    $schema
+                );
+
+                return 0;
+            })
+        ;
         $this->validator->expects($this->once())->method('isValid')->willReturn(true);
         $this->validator->expects($this->never())->method('getErrors');
         $this->validator->expects($this->once())->method('reset');
@@ -871,12 +965,14 @@ final class MessageValidatorTest extends TestCase
         $messageValidator->validateResponse($response, $definition);
         $this->assertTrue($messageValidator->hasViolations());
         $violations = $messageValidator->getViolations();
-        $this->assertIsArray($violations);
         $this->assertCount(1, $violations);
         $violation = $violations[0];
         $this->assertInstanceOf(ConstraintViolation::class, $violation);
         $this->assertSame('Content-Type', $violation->getProperty());
-        $this->assertSame('application/hal+json; charset=utf8 is not a supported content type, supported: application/json', $violation->getMessage());
+        $this->assertSame(
+            'application/hal+json; charset=utf8 is not a supported content type, supported: application/json',
+            $violation->getMessage()
+        );
         $this->assertSame('enum', $violation->getConstraint());
         $this->assertSame('header', $violation->getLocation());
         $this->assertSame(

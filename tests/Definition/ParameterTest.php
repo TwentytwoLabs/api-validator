@@ -18,8 +18,11 @@ final class ParameterTest extends TestCase
         new Parameter('footer', 'bar');
     }
 
+    /**
+     * @param array<string, mixed> $schema
+     */
     #[DataProvider('getData')]
-    public function testShouldBuildParametersWithDefaultValue(string $location): void
+    public function testShouldBuildParametersWithDefaultValue(string $location, bool $required, array $schema): void
     {
         $parameter = new Parameter($location, 'foo');
         $this->assertSame($location, $parameter->getLocation());
