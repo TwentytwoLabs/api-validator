@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace TwentytwoLabs\ApiValidator\Tests;
 
+use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
 use PHPUnit\Framework\TestCase;
 use TwentytwoLabs\ApiValidator\Definition\OperationDefinition;
 use TwentytwoLabs\ApiValidator\Definition\OperationDefinitions;
 use TwentytwoLabs\ApiValidator\Schema;
 
+#[AllowMockObjectsWithoutExpectations]
 final class SchemaTest extends TestCase
 {
     public function testShouldGetOperationDefinitions(): void

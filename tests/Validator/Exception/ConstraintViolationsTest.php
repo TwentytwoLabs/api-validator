@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace TwentytwoLabs\ApiValidator\Tests\Validator\Exception;
 
+use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
 use PHPUnit\Framework\TestCase;
 use TwentytwoLabs\ApiValidator\Validator\ConstraintViolation;
 use TwentytwoLabs\ApiValidator\Validator\Exception\ConstraintViolations;
 
+#[AllowMockObjectsWithoutExpectations]
 final class ConstraintViolationsTest extends TestCase
 {
     public function testShouldNotAddViolation(): void

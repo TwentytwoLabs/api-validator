@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace TwentytwoLabs\ApiValidator\Tests\Definition;
 
+use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use TwentytwoLabs\ApiValidator\Definition\Parameter;
 
+#[AllowMockObjectsWithoutExpectations]
 final class ParameterTest extends TestCase
 {
     public function testShouldThrowExceptionBecauseItIsBadLocation(): void

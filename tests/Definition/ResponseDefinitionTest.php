@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace TwentytwoLabs\ApiValidator\Tests\Definition;
 
+use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use TwentytwoLabs\ApiValidator\Definition\Parameter;
 use TwentytwoLabs\ApiValidator\Definition\Parameters;
 use TwentytwoLabs\ApiValidator\Definition\ResponseDefinition;
 
+#[AllowMockObjectsWithoutExpectations]
 final class ResponseDefinitionTest extends TestCase
 {
     #[DataProvider('getData')]

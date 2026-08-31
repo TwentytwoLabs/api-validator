@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace TwentytwoLabs\ApiValidator\Tests\Decoder;
 
+use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use TwentytwoLabs\ApiValidator\Decoder\DecoderUtils;
 
+#[AllowMockObjectsWithoutExpectations]
 final class DecoderUtilsTest extends TestCase
 {
     #[DataProvider('dataForExtractFormatFromContentType')]

@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace TwentytwoLabs\ApiValidator\Tests\Normalizer;
 
+use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use TwentytwoLabs\ApiValidator\Normalizer\QueryParamsNormalizer;
 
+#[AllowMockObjectsWithoutExpectations]
 final class QueryParamsNormalizerTest extends TestCase
 {
     public function testShouldNormalizeQueryParametersWhenThereAreNoParams(): void

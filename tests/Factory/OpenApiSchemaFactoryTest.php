@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TwentytwoLabs\ApiValidator\Tests\Factory;
 
+use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use TwentytwoLabs\ApiValidator\Definition\OperationDefinition;
@@ -13,6 +14,7 @@ use TwentytwoLabs\ApiValidator\Definition\Parameters;
 use TwentytwoLabs\ApiValidator\Factory\OpenApiSchemaFactory;
 use TwentytwoLabs\ApiValidator\Schema;
 
+#[AllowMockObjectsWithoutExpectations]
 final class OpenApiSchemaFactoryTest extends TestCase
 {
     public function testShouldNotLoadSchemaBecauseExtension(): void

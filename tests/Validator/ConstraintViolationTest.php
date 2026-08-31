@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace TwentytwoLabs\ApiValidator\Tests\Validator;
 
+use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
 use PHPUnit\Framework\TestCase;
 use TwentytwoLabs\ApiValidator\Validator\ConstraintViolation;
 
+#[AllowMockObjectsWithoutExpectations]
 final class ConstraintViolationTest extends TestCase
 {
     public function testConstraintViolationToArray(): void

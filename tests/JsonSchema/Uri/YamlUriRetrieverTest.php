@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace TwentytwoLabs\ApiValidator\Tests\JsonSchema\Uri;
 
+use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
 use PHPUnit\Framework\TestCase;
 use TwentytwoLabs\ApiValidator\JsonSchema\Uri\YamlUriRetriever;
 
+#[AllowMockObjectsWithoutExpectations]
 final class YamlUriRetrieverTest extends TestCase
 {
     public function testItCanLoadAYamlFile(): void

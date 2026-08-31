@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TwentytwoLabs\ApiValidator\Tests\Validator;
 
 use JsonSchema\Validator;
+use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -19,6 +20,7 @@ use TwentytwoLabs\ApiValidator\Definition\ResponseDefinition;
 use TwentytwoLabs\ApiValidator\Validator\ConstraintViolation;
 use TwentytwoLabs\ApiValidator\Validator\MessageValidator;
 
+#[AllowMockObjectsWithoutExpectations]
 final class MessageValidatorTest extends TestCase
 {
     private Validator|MockObject $validator;

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TwentytwoLabs\ApiValidator\Tests\Factory;
 
+use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Cache\CacheItemInterface;
@@ -12,6 +13,7 @@ use TwentytwoLabs\ApiValidator\Factory\CachedSchemaFactoryDecorator;
 use TwentytwoLabs\ApiValidator\Factory\SchemaFactoryInterface;
 use TwentytwoLabs\ApiValidator\Schema;
 
+#[AllowMockObjectsWithoutExpectations]
 final class CachedSchemaFactoryDecoratorTest extends TestCase
 {
     private SchemaFactoryInterface|MockObject $schemaFactory;

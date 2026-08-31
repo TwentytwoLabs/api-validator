@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace TwentytwoLabs\ApiValidator\Tests\Decoder\Adapter;
 
+use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Serializer\Encoder\DecoderInterface as SymfonyDecoderInterface;
 use TwentytwoLabs\ApiValidator\Decoder\Adapter\SymfonyDecoderAdapter;
 
+#[AllowMockObjectsWithoutExpectations]
 final class SymfonyDecoderAdapterTest extends TestCase
 {
     private SymfonyDecoderInterface|MockObject $decoder;

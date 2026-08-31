@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace TwentytwoLabs\ApiValidator\Tests\Definition;
 
+use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
 use PHPUnit\Framework\TestCase;
 use TwentytwoLabs\ApiValidator\Definition\Parameter;
 use TwentytwoLabs\ApiValidator\Definition\Parameters;
 
+#[AllowMockObjectsWithoutExpectations]
 final class ParametersTest extends TestCase
 {
     public function testShouldBuildParametersWithoutParameters(): void
